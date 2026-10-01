@@ -34,6 +34,9 @@ abstract class AuthService {
   /// Updates profile details (bio, college, branch, year, avatar, interests, skills).
   Future<void> updateProfile(UserProfile updatedProfile);
 
+  /// Synchronizes profile from GET /api/v1/me.
+  Future<UserProfile?> syncProfileFromBackend();
+
   /// Toggles saving an opportunity in the user's saved list.
   Future<bool> toggleSaveOpportunity(String opportunityId);
 

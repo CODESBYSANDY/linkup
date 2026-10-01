@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
 import '../../community/widgets/post_card.dart';
 
-/// Screen displaying a public student profile.
+/// Screen displaying a public student profile with Riko styling.
 class PublicProfileScreen extends StatelessWidget {
   final String personId;
   final String? fallbackName;
@@ -32,7 +33,19 @@ class PublicProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Student Profile'),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'Student Profile',
+          style: AppTextStyles.headlineSmall.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
+        ),
       ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -49,16 +62,16 @@ class PublicProfileScreen extends StatelessWidget {
 
               String btnText = 'Connect';
               Color btnBg = AppColors.primary;
-              Color btnFg = AppColors.textInverse;
+              Color btnFg = Colors.white;
 
               if (isConnected) {
-                btnText = 'Connected';
-                btnBg = AppColors.softTeal;
-                btnFg = AppColors.primaryDark;
+                btnText = 'Connected ✓';
+                btnBg = AppColors.surfaceSecondary;
+                btnFg = AppColors.softLavender;
               } else if (isPending) {
                 btnText = 'Request Pending';
-                btnBg = AppColors.surfaceSubtle;
-                btnFg = AppColors.textSecondary;
+                btnBg = AppColors.surfaceElevated;
+                btnFg = AppColors.textMuted;
               }
 
               return ElevatedButton(
@@ -69,6 +82,7 @@ class PublicProfileScreen extends StatelessWidget {
                       SnackBar(
                         content: Text(res == 'Pending' ? 'Connection request sent' : res == 'Connected' ? 'Connected!' : 'Disconnected'),
                         duration: const Duration(seconds: 1),
+                        backgroundColor: AppColors.surfaceElevated,
                       ),
                     );
                   }
@@ -76,8 +90,10 @@ class PublicProfileScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: btnBg,
                   foregroundColor: btnFg,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                child: Text(btnText, style: AppTextStyles.labelLarge),
+                child: Text(btnText, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700)),
               );
             },
           ),
@@ -95,27 +111,36 @@ class PublicProfileScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: AppRadii.cardRadius,
                   border: Border.all(color: AppColors.border),
                 ),
                 child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 36,
-                      backgroundColor: AppColors.softBlue,
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                      alignment: Alignment.center,
                       child: Text(
                         name.isNotEmpty ? name[0] : 'S',
-                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.secondary),
+                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Text(name, style: AppTextStyles.headlineSmall),
+                    const SizedBox(height: 14),
+                    Text(name, style: AppTextStyles.headlineSmall.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 4),
-                    Text(role, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryDark, fontWeight: FontWeight.w600)),
+                    Text(role, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.softLavender, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 2),
-                    Text('$college · $year', style: AppTextStyles.caption),
+                    Text('$college · $year', style: AppTextStyles.caption.copyWith(color: AppColors.textMuted)),
                     const SizedBox(height: 12),
-                    Text(bio, textAlign: TextAlign.center, style: AppTextStyles.bodySmall),
+                    Text(bio, textAlign: TextAlign.center, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
                   ],
                 ),
               ),
@@ -124,7 +149,7 @@ class PublicProfileScreen extends StatelessWidget {
 
               // Skills Section
               const Text('Skills & Expertise', style: AppTextStyles.headlineSmall),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -132,11 +157,11 @@ class PublicProfileScreen extends StatelessWidget {
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppColors.surfaceSecondary,
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: AppColors.border),
                     ),
-                    child: Text(s, style: AppTextStyles.labelMedium),
+                    child: Text(s, style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
                   );
                 }).toList(),
               ),
@@ -145,7 +170,7 @@ class PublicProfileScreen extends StatelessWidget {
 
               // Interests Section
               const Text('Technical Interests', style: AppTextStyles.headlineSmall),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -153,10 +178,11 @@ class PublicProfileScreen extends StatelessWidget {
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.softTeal,
+                      color: AppColors.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.primaryBright.withValues(alpha: 0.3)),
                     ),
-                    child: Text(i, style: AppTextStyles.caption.copyWith(color: AppColors.primaryDark, fontWeight: FontWeight.w600)),
+                    child: Text(i, style: AppTextStyles.caption.copyWith(color: AppColors.primaryLight, fontWeight: FontWeight.w600)),
                   );
                 }).toList(),
               ),
@@ -177,13 +203,13 @@ class PublicProfileScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: AppColors.border),
                       ),
                       child: Center(
                         child: Text(
                           'No public posts yet.',
-                          style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                          style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted),
                         ),
                       ),
                     );

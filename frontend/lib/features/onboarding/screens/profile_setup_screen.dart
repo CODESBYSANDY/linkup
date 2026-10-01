@@ -3,6 +3,10 @@ import '../../../app/routes.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
+import '../../../core/widgets/app_background.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/riko_avatar.dart';
+import '../../../core/widgets/riko_expression.dart';
 import '../../../data/models/user_profile.dart';
 
 /// Step 1 of onboarding: Setup student academic profile.
@@ -54,7 +58,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       branch: _branchController.text.trim(),
       year: _selectedYear,
       bio: _bioController.text.trim(),
-      avatarInitials: initials.isNotEmpty ? initials : 'SU',
+      avatarInitials: initials.isNotEmpty ? initials : 'SB',
     );
 
     await AppServices.auth.updateProfile(updated);
@@ -69,8 +73,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Setup Student Profile'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: SafeArea(
+      body: AppBackground(
+        showAmbientGlow: true,
+        showParticles: false,
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -88,7 +96,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           child: Container(
                             height: 4,
                             decoration: BoxDecoration(
-                              color: AppColors.primary,
+                              color: AppColors.primaryBright,
                               borderRadius: BorderRadius.circular(2),
                             ),
                           ),
@@ -98,7 +106,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           child: Container(
                             height: 4,
                             decoration: BoxDecoration(
-                              color: AppColors.border,
+                              color: AppColors.surfaceElevated,
                               borderRadius: BorderRadius.circular(2),
                             ),
                           ),
@@ -106,70 +114,60 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      'Step 1 of 2: Academic Details',
-                      style: AppTextStyles.labelMedium.copyWith(color: AppColors.primaryDark),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Step 1 of 2: Academic Details',
+                          style: AppTextStyles.labelMedium.copyWith(color: AppColors.softLavender),
+                        ),
+                        const RikoAvatar(
+                          expression: RikoExpression.helpful,
+                          size: 26,
+                        ),
+                      ],
                     ),
 
                     const SizedBox(height: 20),
 
                     // Avatar placeholder with initials
                     Center(
-                      child: Stack(
-                        children: [
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [AppColors.primary, AppColors.secondary],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: Center(
-                              child: Text(
-                                _nameController.text.isNotEmpty
-                                    ? _nameController.text.trim().split(' ').map((e) => e.isNotEmpty ? e[0].toUpperCase() : '').take(2).join()
-                                    : 'SU',
-                                style: const TextStyle(
-                                  color: AppColors.textInverse,
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                      child: Container(
+                        width: 76,
+                        height: 76,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [AppColors.primaryDark, AppColors.secondary],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          border: Border.all(color: AppColors.primaryBright, width: 2),
+                        ),
+                        child: Center(
+                          child: Text(
+                            _nameController.text.isNotEmpty
+                                ? _nameController.text.trim().split(' ').map((e) => e.isNotEmpty ? e[0].toUpperCase() : '').take(2).join()
+                                : 'SB',
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: AppColors.border),
-                              ),
-                              child: const Icon(
-                                Icons.edit_rounded,
-                                size: 14,
-                                color: AppColors.primaryDark,
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
 
                     const SizedBox(height: 24),
 
                     // Name Field
-                    Text('Your Full Name', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                    const SizedBox(height: 6),
+                    Text('Your Full Name', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _nameController,
                       onChanged: (_) => setState(() {}),
+                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
                       decoration: const InputDecoration(
                         hintText: 'e.g. Sandeep B',
                         prefixIcon: Icon(Icons.person_outline_rounded, size: 20),
@@ -185,10 +183,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     const SizedBox(height: 16),
 
                     // College Name Field
-                    Text('College / University', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                    const SizedBox(height: 6),
+                    Text('College / University', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _collegeController,
+                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
                       decoration: const InputDecoration(
                         hintText: 'e.g. KPR Institute of Engineering and Technology',
                         prefixIcon: Icon(Icons.account_balance_outlined, size: 20),
@@ -204,10 +203,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     const SizedBox(height: 16),
 
                     // Branch & Department Field
-                    Text('Branch / Department', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                    const SizedBox(height: 6),
+                    Text('Branch / Department', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _branchController,
+                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
                       decoration: const InputDecoration(
                         hintText: 'e.g. Computer Science & Engineering',
                         prefixIcon: Icon(Icons.school_outlined, size: 20),
@@ -223,12 +223,17 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     const SizedBox(height: 16),
 
                     // Year Dropdown
-                    Text('Academic Year', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                    const SizedBox(height: 6),
+                    Text('Academic Year', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                    const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       initialValue: _selectedYear,
+                      dropdownColor: AppColors.surfaceSecondary,
+                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
                       items: _yearOptions.map((y) {
-                        return DropdownMenuItem(value: y, child: Text(y));
+                        return DropdownMenuItem(
+                          value: y,
+                          child: Text(y, style: const TextStyle(color: AppColors.textPrimary)),
+                        );
                       }).toList(),
                       onChanged: (val) {
                         if (val != null) setState(() => _selectedYear = val);
@@ -241,11 +246,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     const SizedBox(height: 16),
 
                     // Bio Field
-                    Text('Student Bio', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                    const SizedBox(height: 6),
+                    Text('Student Bio', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _bioController,
                       maxLines: 3,
+                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
                       decoration: const InputDecoration(
                         hintText: 'Share what you love building, hackathons you enter, or tech topics you are learning...',
                       ),
@@ -254,9 +260,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     const SizedBox(height: 28),
 
                     // Continue Button
-                    ElevatedButton(
+                    AppButton(
+                      text: 'Continue to Interests',
                       onPressed: _handleContinue,
-                      child: const Text('Continue to Interests', style: AppTextStyles.labelLarge),
+                      variant: AppButtonVariant.primary,
                     ),
                   ],
                 ),

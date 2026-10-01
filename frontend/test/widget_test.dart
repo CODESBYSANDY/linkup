@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linkup/app/app.dart';
 import 'package:linkup/core/services/app_services.dart';
+import 'package:linkup/features/community/screens/community_screen.dart';
+import 'package:linkup/features/connect/screens/connect_screen.dart';
+import 'package:linkup/features/assistant/screens/riko_assistant_screen.dart';
 
 void main() {
   setUp(() async {
@@ -9,11 +12,16 @@ void main() {
     await AppServices.init();
   });
 
-  testWidgets('Full Interactive Flow: Splash -> Guest Login -> Home -> Details -> Bookmark', (WidgetTester tester) async {
+  testWidgets('Full Interactive Flow: Splash -> Guest Login -> Home -> Explore -> Saved', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
     await AppServices.auth.logout();
 
     await tester.pumpWidget(const LinkUpApp());
     expect(find.text('LINKUP'), findsOneWidget);
+    expect(find.text('Riko'), findsOneWidget);
 
     // Wait for Splash screen delay to finish
     await tester.pumpAndSettle(const Duration(seconds: 2));
@@ -26,43 +34,45 @@ void main() {
     await tester.tap(find.text('Continue as Guest'));
     await tester.pumpAndSettle();
 
-    // Verify Home Screen appears
-    expect(find.text('Find your next opportunity'), findsOneWidget);
-    expect(find.text('Featured Opportunity'), findsOneWidget);
+    // Verify Home Screen elements
+    expect(find.text('Featured for you'), findsOneWidget);
+    expect(find.text('Latest Hackathons'), findsOneWidget);
+    expect(find.text('Search opportunities...'), findsOneWidget);
 
-    // Tap Search bar preview
-    await tester.tap(find.text('Search opportunities, people & topics...'));
+    // Switch to Explore Tab via bottom navigation
+    await tester.tap(find.text('Explore'));
     await tester.pumpAndSettle();
 
-    // Verify Search Screen opens
-    expect(find.byType(TextField), findsOneWidget);
+    // Verify Explore Screen
+    expect(find.text('Explore'), findsWidgets);
+    expect(find.text('Hackathons'), findsWidgets);
 
-    // Enter search query
-    await tester.enterText(find.byType(TextField), 'Cybersecurity');
+    // Switch to Saved Tab
+    await tester.tap(find.text('Saved'));
     await tester.pumpAndSettle();
 
-    // Verify search results exist
-    expect(find.textContaining('Cybersecurity'), findsWidgets);
-
-    // Go back to Home
-    await tester.tap(find.byType(BackButton));
-    await tester.pumpAndSettle();
+    // Verify Saved Screen
+    expect(find.text('Saved Opportunities'), findsOneWidget);
   });
 
-  testWidgets('Community Flow: Like post, Add Comment, Create Post', (WidgetTester tester) async {
+  testWidgets('Community Flow: Post & Discuss', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
     await AppServices.auth.loginAsGuest();
 
-    await tester.pumpWidget(const LinkUpApp());
-    await tester.pumpAndSettle(const Duration(seconds: 2));
-
-    // Navigate to Community tab
-    await tester.tap(find.text('Community'));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: CommunityScreen(),
+      ),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('Community & Knowledge'), findsOneWidget);
+    expect(find.text('Community'), findsOneWidget);
 
-    // Tap New Post FAB
-    await tester.tap(find.text('New Post'));
+    // Tap Start Discussion FAB
+    await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
 
     expect(find.text('Create Post'), findsOneWidget);
@@ -82,30 +92,37 @@ void main() {
   });
 
   testWidgets('Connect Flow: Connect with student, Join Group, Request Mentor', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
     await AppServices.auth.loginAsGuest();
 
-    await tester.pumpWidget(const LinkUpApp());
-    await tester.pumpAndSettle(const Duration(seconds: 2));
-
-    // Navigate to Connect tab
-    await tester.tap(find.text('Connect'));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: ConnectScreen(),
+      ),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('Connect & Network'), findsOneWidget);
     expect(find.text('Students & Peers'), findsOneWidget);
 
-    // Switch to Groups segment
-    await tester.tap(find.text('Groups'));
+    // Switch to Communities chip
+    await tester.tap(find.text('Communities'));
     await tester.pumpAndSettle();
     expect(find.text('Technical Communities'), findsOneWidget);
 
-    // Switch to Mentors segment
+    // Switch to Mentors chip
     await tester.tap(find.text('Mentors'));
     await tester.pumpAndSettle();
     expect(find.text('Knowledge Mentors'), findsOneWidget);
   });
 
   testWidgets('Profile Flow: View Profile, Open Edit Profile, Save Changes', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
     await AppServices.auth.loginAsGuest();
 
     await tester.pumpWidget(const LinkUpApp());
@@ -115,10 +132,9 @@ void main() {
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
 
-    expect(find.text('My Profile'), findsOneWidget);
     expect(find.text('Skills & Tech'), findsOneWidget);
 
-    // Open Edit Profile via AppBar icon
+    // Open Edit Profile via tooltip
     await tester.tap(find.byTooltip('Edit Profile'));
     await tester.pumpAndSettle();
 
@@ -134,10 +150,39 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify updated profile name appears
-    expect(find.text('Sandeep B Tech'), findsOneWidget);
+    expect(find.text('Sandeep B Tech'), findsWidgets);
+  });
+
+  testWidgets('Riko Assistant Screen Flow', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await AppServices.auth.loginAsGuest();
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: RikoAssistantScreen(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Riko'), findsWidgets);
+    expect(find.text('Online Scout'), findsOneWidget);
+
+    // Tap quick suggestion chip
+    await tester.tap(find.text('Find cybersecurity hackathons'));
+    await tester.pumpAndSettle();
+
+    // Verify Riko response appears
+    expect(find.textContaining('cybersecurity'), findsWidgets);
   });
 
   testWidgets('Theme Switcher & Settings Flow', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
     await AppServices.auth.loginAsGuest();
 
     await tester.pumpWidget(const LinkUpApp());

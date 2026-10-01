@@ -1,33 +1,70 @@
 import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
 import '../../../data/models/opportunity.dart';
 import '../screens/opportunity_detail_screen.dart';
 
-/// Reusable interactive Opportunity Card.
+/// Reusable Opportunity Card matching the Riko visual design language.
 class OpportunityCard extends StatelessWidget {
   final Opportunity opportunity;
+  final bool isFeaturedStyle;
 
   const OpportunityCard({
     super.key,
     required this.opportunity,
+    this.isFeaturedStyle = false,
   });
 
-  IconData _getCategoryIcon(String category) {
-    switch (category.toLowerCase()) {
-      case 'hackathons':
-        return Icons.code_rounded;
-      case 'internships':
-      case 'jobs':
-        return Icons.work_outline_rounded;
-      case 'competitions':
-        return Icons.emoji_events_outlined;
-      case 'workshops':
-        return Icons.bolt_rounded;
-      default:
-        return Icons.event_note_rounded;
+  Widget _buildOrgLogo(String org, String category) {
+    Color bg;
+    String label;
+    if (org.toLowerCase().contains('google')) {
+      bg = const Color(0xFF1E293B);
+      label = 'G';
+    } else if (org.toLowerCase().contains('flipkart')) {
+      bg = const Color(0xFF2874F0);
+      label = 'fk';
+    } else if (org.toLowerCase().contains('isro')) {
+      bg = const Color(0xFFFF6D00);
+      label = 'ISRO';
+    } else if (org.toLowerCase().contains('tcs') || org.toLowerCase().contains('tata')) {
+      bg = const Color(0xFF00838F);
+      label = 'TCS';
+    } else if (org.toLowerCase().contains('microsoft')) {
+      bg = const Color(0xFF00A4EF);
+      label = 'MS';
+    } else if (org.toLowerCase().contains('aws') || org.toLowerCase().contains('unstop')) {
+      bg = const Color(0xFF232F3E);
+      label = 'AWS';
+    } else if (org.toLowerCase().contains('iit')) {
+      bg = const Color(0xFF6B21A8);
+      label = 'IIT';
+    } else {
+      bg = AppColors.surfaceElevated;
+      label = org.isNotEmpty ? org.substring(0, org.length > 2 ? 2 : org.length).toUpperCase() : 'OP';
     }
+
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+          fontSize: 14,
+          letterSpacing: -0.5,
+        ),
+      ),
+    );
   }
 
   @override
@@ -37,192 +74,159 @@ class OpportunityCard extends StatelessWidget {
       builder: (context, user, _) {
         final isSaved = user?.savedOpportunityIds.contains(opportunity.id) ?? false;
 
-        return InkWell(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => OpportunityDetailScreen(opportunityId: opportunity.id),
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => OpportunityDetailScreen(opportunityId: opportunity.id),
+                ),
+              );
+            },
+            borderRadius: AppRadii.cardRadius,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isFeaturedStyle ? const Color(0xFF141738) : AppColors.surface,
+                borderRadius: AppRadii.cardRadius,
+                border: Border.all(
+                  color: isFeaturedStyle
+                      ? AppColors.primaryBright.withValues(alpha: 0.35)
+                      : AppColors.border,
+                  width: 1,
+                ),
               ),
-            );
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-              boxShadow: const [
-                BoxShadow(
-                  color: AppColors.shadow,
-                  blurRadius: 6,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Top Row: Category badge, Mode & Bookmark Button
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.softTeal,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _getCategoryIcon(opportunity.category),
-                            size: 14,
-                            color: AppColors.primaryDark,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            opportunity.category.toUpperCase(),
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.primaryDark,
-                              fontWeight: FontWeight.w700,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top Row: Org Logo + Title & Details + Bookmark
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildOrgLogo(opportunity.organization, opportunity.category),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              opportunity.title,
+                              style: AppTextStyles.titleMedium.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceSubtle,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        opportunity.mode,
-                        style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      icon: Icon(
-                        isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                        color: isSaved ? AppColors.primary : AppColors.textSecondary,
-                        size: 22,
-                      ),
-                      onPressed: () async {
-                        final saved = await AppServices.auth.toggleSaveOpportunity(opportunity.id);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).clearSnackBars();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(saved ? 'Saved to your bookmarks' : 'Removed from bookmarks'),
-                              duration: const Duration(seconds: 1),
-                              backgroundColor: AppColors.textPrimary,
+                            const SizedBox(height: 3),
+                            Text(
+                              opportunity.organization,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textMuted,
+                              ),
                             ),
-                          );
-                        }
-                      },
-                      constraints: const BoxConstraints(),
-                      padding: EdgeInsets.zero,
-                      tooltip: isSaved ? 'Remove from Saved' : 'Save Opportunity',
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                // Title
-                Text(
-                  opportunity.title,
-                  style: AppTextStyles.titleMedium,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                const SizedBox(height: 4),
-
-                // Organization & Location
-                Text(
-                  '${opportunity.organization} · ${opportunity.location}',
-                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Description
-                Text(
-                  opportunity.description,
-                  style: AppTextStyles.bodySmall,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                const SizedBox(height: 14),
-
-                // Skills tags wrap
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: opportunity.skills.take(3).map((skill) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceSubtle,
-                        borderRadius: BorderRadius.circular(6),
+                            const SizedBox(height: 4),
+                            // Deadline text with badge styling
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.access_time_rounded,
+                                  size: 13,
+                                  color: opportunity.daysLeft <= 5 ? AppColors.warning : AppColors.softLavender,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Deadline in ${opportunity.daysLeft} days',
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: opportunity.daysLeft <= 5 ? AppColors.warning : AppColors.softLavender,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                      child: Text(
-                        skill,
-                        style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+                      IconButton(
+                        icon: Icon(
+                          isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                          color: isSaved ? AppColors.primaryBright : AppColors.textMuted,
+                          size: 22,
+                        ),
+                        onPressed: () async {
+                          final saved = await AppServices.auth.toggleSaveOpportunity(opportunity.id);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).clearSnackBars();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(saved ? 'Saved to bookmarks' : 'Removed from bookmarks'),
+                                duration: const Duration(milliseconds: 900),
+                                backgroundColor: AppColors.surfaceElevated,
+                              ),
+                            );
+                          }
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: isSaved ? 'Remove from Saved' : 'Save',
                       ),
-                    );
-                  }).toList(),
-                ),
+                    ],
+                  ),
 
-                const SizedBox(height: 14),
-                const Divider(),
-                const SizedBox(height: 8),
+                  const SizedBox(height: 12),
 
-                // Bottom Row: Prize / Salary & Deadline
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
+                  // Bottom Tags Row: Mode, Category, Stipend/Prize
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      _buildTag(opportunity.mode, isPrimary: false),
+                      _buildTag(
+                        opportunity.category == 'Hackathons'
+                            ? 'Team Event'
+                            : (opportunity.category == 'Internships' ? 'Internship' : opportunity.category),
+                        isPrimary: false,
+                      ),
+                      _buildTag(
                         opportunity.salary ?? opportunity.prize,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.primaryDark,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        isPrimary: true,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.schedule_rounded,
-                          size: 14,
-                          color: opportunity.isClosingSoon ? AppColors.error : AppColors.textTertiary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          opportunity.deadline,
-                          style: AppTextStyles.caption.copyWith(
-                            color: opportunity.isClosingSoon ? AppColors.error : AppColors.textSecondary,
-                            fontWeight: opportunity.isClosingSoon ? FontWeight.w600 : FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTag(String label, {required bool isPrimary}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: isPrimary
+            ? AppColors.primary.withValues(alpha: 0.18)
+            : AppColors.surfaceSecondary,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isPrimary
+              ? AppColors.primaryBright.withValues(alpha: 0.35)
+              : AppColors.borderSubtle,
+          width: 0.8,
+        ),
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.labelSmall.copyWith(
+          color: isPrimary ? AppColors.primaryLight : AppColors.textMuted,
+          fontWeight: isPrimary ? FontWeight.w700 : FontWeight.w500,
+          fontSize: 11,
+        ),
+      ),
     );
   }
 }

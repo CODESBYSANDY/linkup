@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
-import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/app_chip.dart';
+import '../../../core/widgets/riko_empty_state.dart';
+import '../../../core/widgets/riko_expression.dart';
 import '../../../data/models/person.dart';
 import '../../../data/models/group.dart';
 import '../../../data/models/post.dart';
@@ -11,11 +13,16 @@ import '../../profile/screens/public_profile_screen.dart';
 import '../../groups/screens/group_detail_screen.dart';
 import '../../community/screens/post_detail_screen.dart';
 
-/// Screen performing search across Opportunities, People, Groups, and Posts.
+/// Comprehensive search screen across Opportunities, People, Groups, and Posts.
 class SearchScreen extends StatefulWidget {
   final String initialQuery;
+  final String? initialCategory;
 
-  const SearchScreen({super.key, this.initialQuery = ''});
+  const SearchScreen({
+    super.key,
+    this.initialQuery = '',
+    this.initialCategory,
+  });
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -24,12 +31,15 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   late final TextEditingController _searchController;
   int _selectedFilterIndex = 0;
-  final List<String> _filters = ['All', 'Opportunities', 'People', 'Groups', 'Posts'];
+  final List<String> _filters = ['All', 'Opportunities', 'People', 'Communities', 'Posts'];
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController(text: widget.initialQuery);
+    if (widget.initialCategory != null) {
+      _selectedFilterIndex = 1; // Filter to opportunities
+    }
   }
 
   @override
@@ -49,30 +59,35 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           );
         },
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border),
           ),
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: AppColors.softTeal,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                radius: 22,
                 child: Text(
                   person.avatarInitials,
-                  style: AppTextStyles.titleSmall.copyWith(color: AppColors.primaryDark),
+                  style: AppTextStyles.titleSmall.copyWith(color: AppColors.primaryLight),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(person.name, style: AppTextStyles.titleSmall),
-                    Text(person.role, style: AppTextStyles.caption),
+                    Text(person.name, style: AppTextStyles.titleMedium),
+                    const SizedBox(height: 2),
+                    Text(
+                      person.role,
+                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted),
+                    ),
                   ],
                 ),
               ),
@@ -95,32 +110,36 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           );
         },
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border),
           ),
           child: Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
-                  color: AppColors.softBlue,
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.secondary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.groups_rounded, color: AppColors.secondary, size: 20),
+                child: const Icon(Icons.groups_rounded, color: AppColors.secondaryLight, size: 22),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(group.name, style: AppTextStyles.titleSmall),
-                    Text('${group.membersCount} members · ${group.category}', style: AppTextStyles.caption),
+                    Text(group.name, style: AppTextStyles.titleMedium),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${group.membersCount} members · ${group.category}',
+                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted),
+                    ),
                   ],
                 ),
               ),
@@ -143,29 +162,29 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           );
         },
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(post.title, style: AppTextStyles.titleSmall),
-              const SizedBox(height: 4),
+              Text(post.title, style: AppTextStyles.titleMedium),
+              const SizedBox(height: 6),
               Text(
                 post.content,
-                style: AppTextStyles.bodySmall,
+                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Text(
-                'By ${post.authorName} · ${post.commentsCount} comments · ${post.likesCount} upvotes',
-                style: AppTextStyles.caption,
+                'By ${post.authorName} · ${post.commentsCount} comments · ${post.upvotes} upvotes',
+                style: AppTextStyles.caption.copyWith(color: AppColors.textTertiary),
               ),
             ],
           ),
@@ -204,27 +223,47 @@ class _SearchScreenState extends State<SearchScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
         titleSpacing: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Padding(
           padding: const EdgeInsets.only(right: 16),
-          child: TextField(
-            controller: _searchController,
-            autofocus: true,
-            textInputAction: TextInputAction.search,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              hintText: 'Search hackathons, people, topics...',
-              prefixIcon: const Icon(Icons.search_rounded, size: 20),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear_rounded, size: 18),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {});
-                      },
-                    )
-                  : null,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Container(
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceSecondary,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: TextField(
+              controller: _searchController,
+              autofocus: true,
+              textInputAction: TextInputAction.search,
+              onChanged: (_) => setState(() {}),
+              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: 'Search hackathons, people, topics...',
+                hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textTertiary),
+                prefixIcon: const Icon(Icons.search_rounded, size: 20, color: AppColors.softLavender),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear_rounded, size: 18, color: AppColors.textMuted),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {});
+                        },
+                      )
+                    : null,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+              ),
             ),
           ),
         ),
@@ -244,19 +283,10 @@ class _SearchScreenState extends State<SearchScreen> {
                     final isSelected = _selectedFilterIndex == index;
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(_filters[index]),
-                        selected: isSelected,
-                        onSelected: (_) => setState(() => _selectedFilterIndex = index),
-                        backgroundColor: AppColors.surface,
-                        selectedColor: AppColors.softTeal,
-                        side: BorderSide(
-                          color: isSelected ? AppColors.primary : AppColors.border,
-                        ),
-                        labelStyle: AppTextStyles.labelMedium.copyWith(
-                          color: isSelected ? AppColors.primaryDark : AppColors.textSecondary,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        ),
+                      child: AppChip(
+                        label: _filters[index],
+                        isSelected: isSelected,
+                        onSelected: () => setState(() => _selectedFilterIndex = index),
                       ),
                     );
                   }),
@@ -264,16 +294,17 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
 
-            const Divider(height: 1),
+            const Divider(height: 1, color: AppColors.borderSubtle),
 
             // Search Content
             Expanded(
               child: !hasAnyResults
-                  ? EmptyState(
-                      icon: Icons.search_off_rounded,
+                  ? RikoEmptyState(
+                      expression: RikoExpression.thinking,
                       title: 'No results found',
-                      description: 'Try searching with different keywords like "Cybersecurity", "AI", "Internship", or "Python".',
+                      message: 'Riko could not find anything matching "$query". Try searching with keywords like "Cybersecurity", "AI", "Hackathon", or "Python".',
                       actionLabel: 'Clear Search',
+                      actionIcon: Icons.refresh_rounded,
                       onAction: () {
                         _searchController.clear();
                         setState(() {});

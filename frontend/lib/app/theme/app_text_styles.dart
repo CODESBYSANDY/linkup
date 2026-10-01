@@ -1,39 +1,45 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
-/// Centralized typography and text styles for the application.
+/// Centralized typography and text styles for LinkUp Riko Design System.
 /// 
-/// Ensures uniform font sizes, weights, line heights, and hierarchy.
+/// Hierarchy:
+/// Display: Large bold branding & hero greetings
+/// H1: 28–34
+/// H2: 22–26
+/// H3: 18–20
+/// Body: 14–16
+/// Caption / Label: 11–13
 abstract class AppTextStyles {
   // Display Styles (Large headers, hero titles)
   static const TextStyle displayLarge = TextStyle(
-    fontSize: 32,
-    fontWeight: FontWeight.w700,
-    letterSpacing: -0.8,
-    height: 1.2,
+    fontSize: 34,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -1.0,
+    height: 1.15,
     color: AppColors.textPrimary,
   );
 
   static const TextStyle displayMedium = TextStyle(
     fontSize: 28,
     fontWeight: FontWeight.w700,
-    letterSpacing: -0.6,
-    height: 1.25,
+    letterSpacing: -0.8,
+    height: 1.2,
     color: AppColors.textPrimary,
   );
 
   static const TextStyle displaySmall = TextStyle(
     fontSize: 24,
-    fontWeight: FontWeight.w600,
-    letterSpacing: -0.4,
-    height: 1.3,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.5,
+    height: 1.25,
     color: AppColors.textPrimary,
   );
 
   // Headline Styles (Section headers)
   static const TextStyle headlineLarge = TextStyle(
     fontSize: 22,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w700,
     letterSpacing: -0.3,
     height: 1.3,
     color: AppColors.textPrimary,
@@ -51,16 +57,16 @@ abstract class AppTextStyles {
     fontSize: 18,
     fontWeight: FontWeight.w600,
     letterSpacing: -0.1,
-    height: 1.4,
+    height: 1.35,
     color: AppColors.textPrimary,
   );
 
   // Title Styles (Card titles, modal titles, list item titles)
   static const TextStyle titleLarge = TextStyle(
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: FontWeight.w600,
     letterSpacing: 0,
-    height: 1.4,
+    height: 1.35,
     color: AppColors.textPrimary,
   );
 
@@ -86,7 +92,7 @@ abstract class AppTextStyles {
     fontWeight: FontWeight.w400,
     letterSpacing: 0.15,
     height: 1.5,
-    color: AppColors.textPrimary,
+    color: AppColors.textSecondary,
   );
 
   static const TextStyle bodyMedium = TextStyle(
@@ -94,7 +100,7 @@ abstract class AppTextStyles {
     fontWeight: FontWeight.w400,
     letterSpacing: 0.15,
     height: 1.5,
-    color: AppColors.textPrimary,
+    color: AppColors.textSecondary,
   );
 
   static const TextStyle bodySmall = TextStyle(
@@ -102,7 +108,7 @@ abstract class AppTextStyles {
     fontWeight: FontWeight.w400,
     letterSpacing: 0.2,
     height: 1.45,
-    color: AppColors.textSecondary,
+    color: AppColors.textMuted,
   );
 
   // Label / Button Styles (Buttons, badges, tabs, chips)
@@ -119,7 +125,7 @@ abstract class AppTextStyles {
     fontWeight: FontWeight.w600,
     letterSpacing: 0.3,
     height: 1.3,
-    color: AppColors.textSecondary,
+    color: AppColors.textMuted,
   );
 
   static const TextStyle labelSmall = TextStyle(
@@ -127,7 +133,7 @@ abstract class AppTextStyles {
     fontWeight: FontWeight.w500,
     letterSpacing: 0.4,
     height: 1.3,
-    color: AppColors.textSecondary,
+    color: AppColors.textMuted,
   );
 
   // Caption & Tag styles
@@ -136,6 +142,22 @@ abstract class AppTextStyles {
     fontWeight: FontWeight.w400,
     letterSpacing: 0.2,
     height: 1.4,
-    color: AppColors.textTertiary,
+    color: AppColors.textMuted,
+  );
+
+  // Riko Mascot Speech & Tagline
+  static const TextStyle rikoTagline = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.3,
+    color: AppColors.softLavender,
+  );
+
+  static const TextStyle rikoSpeech = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.1,
+    height: 1.4,
+    color: AppColors.textPrimary,
   );
 }

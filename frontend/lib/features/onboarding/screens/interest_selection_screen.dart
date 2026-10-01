@@ -3,6 +3,11 @@ import '../../../app/routes.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
+import '../../../core/widgets/app_background.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_chip.dart';
+import '../../../core/widgets/riko_avatar.dart';
+import '../../../core/widgets/riko_expression.dart';
 import '../../../data/models/user_profile.dart';
 
 /// Step 2 of onboarding: Choose student technical interests and domains.
@@ -84,8 +89,12 @@ class _InterestSelectionScreenState extends State<InterestSelectionScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Personalize Your Feed'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: SafeArea(
+      body: AppBackground(
+        showAmbientGlow: true,
+        showParticles: false,
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -101,7 +110,7 @@ class _InterestSelectionScreenState extends State<InterestSelectionScreen> {
                         child: Container(
                           height: 4,
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            color: AppColors.primaryBright,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -111,7 +120,7 @@ class _InterestSelectionScreenState extends State<InterestSelectionScreen> {
                         child: Container(
                           height: 4,
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            color: AppColors.primaryBright,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -119,9 +128,18 @@ class _InterestSelectionScreenState extends State<InterestSelectionScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    'Step 2 of 2: Technical Domains',
-                    style: AppTextStyles.labelMedium.copyWith(color: AppColors.primaryDark),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Step 2 of 2: Technical Domains',
+                        style: AppTextStyles.labelMedium.copyWith(color: AppColors.softLavender),
+                      ),
+                      const RikoAvatar(
+                        expression: RikoExpression.usingTablet,
+                        size: 26,
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 20),
@@ -132,9 +150,9 @@ class _InterestSelectionScreenState extends State<InterestSelectionScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Select domains you want to discover opportunities, mentors, and student groups for.',
+                    'Riko will curate hackathons, internships, and mentors tailored to your choices.',
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: AppColors.textMuted,
                     ),
                   ),
 
@@ -146,20 +164,10 @@ class _InterestSelectionScreenState extends State<InterestSelectionScreen> {
                     runSpacing: 10,
                     children: _availableInterests.map((interest) {
                       final isSelected = _selectedInterests.contains(interest);
-                      return FilterChip(
-                        label: Text(interest),
-                        selected: isSelected,
-                        onSelected: (_) => _toggleInterest(interest),
-                        backgroundColor: AppColors.surface,
-                        selectedColor: AppColors.softTeal,
-                        side: BorderSide(
-                          color: isSelected ? AppColors.primary : AppColors.border,
-                          width: isSelected ? 1.5 : 1.0,
-                        ),
-                        labelStyle: AppTextStyles.labelMedium.copyWith(
-                          color: isSelected ? AppColors.primaryDark : AppColors.textPrimary,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        ),
+                      return AppChip(
+                        label: interest,
+                        isSelected: isSelected,
+                        onSelected: () => _toggleInterest(interest),
                       );
                     }).toList(),
                   ),
@@ -167,18 +175,11 @@ class _InterestSelectionScreenState extends State<InterestSelectionScreen> {
                   const SizedBox(height: 36),
 
                   // Submit Button
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _handleComplete,
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : const Text('Complete & Enter LinkUp', style: AppTextStyles.labelLarge),
+                  AppButton(
+                    text: 'Complete & Enter LinkUp',
+                    onPressed: _handleComplete,
+                    isLoading: _isLoading,
+                    variant: AppButtonVariant.primary,
                   ),
                 ],
               ),

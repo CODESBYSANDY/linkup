@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_chip.dart';
 import '../../../data/models/post.dart';
 
 /// Screen allowing students to compose and publish new community posts.
@@ -39,7 +41,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isPublishing = true);
-    await Future.delayed(const Duration(milliseconds: 300)); // UI smoothness
+    await Future.delayed(const Duration(milliseconds: 300));
 
     final user = AppServices.auth.currentUser;
     final tagsList = _tagsController.text
@@ -84,23 +86,39 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(widget.initialGroupName != null ? 'Post in ${widget.initialGroupName}' : 'Create Post'),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          widget.initialGroupName != null ? 'Post in ${widget.initialGroupName}' : 'Create Post',
+          style: AppTextStyles.headlineSmall.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: ElevatedButton(
-              onPressed: _isPublishing ? null : _handlePublish,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                minimumSize: Size.zero,
+            child: SizedBox(
+              height: 38,
+              child: ElevatedButton(
+                onPressed: _isPublishing ? null : _handlePublish,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: _isPublishing
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('Publish', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
               ),
-              child: _isPublishing
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Text('Publish', style: AppTextStyles.labelMedium),
             ),
           ),
         ],
@@ -114,8 +132,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Post Type Selector
-                const Text('Choose Category', style: AppTextStyles.labelLarge),
-                const SizedBox(height: 8),
+                const Text('Choose Category', style: AppTextStyles.headlineSmall),
+                const SizedBox(height: 10),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
@@ -124,19 +142,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       final isSelected = _selectedType == type;
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: Text(type.displayName),
-                          selected: isSelected,
-                          onSelected: (_) => setState(() => _selectedType = type),
-                          backgroundColor: AppColors.surface,
-                          selectedColor: AppColors.softTeal,
-                          side: BorderSide(
-                            color: isSelected ? AppColors.primary : AppColors.border,
-                          ),
-                          labelStyle: AppTextStyles.labelMedium.copyWith(
-                            color: isSelected ? AppColors.primaryDark : AppColors.textSecondary,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                          ),
+                        child: AppChip(
+                          label: type.displayName,
+                          isSelected: isSelected,
+                          onSelected: () => setState(() => _selectedType = type),
                         ),
                       );
                     }).toList(),
@@ -146,11 +155,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 const SizedBox(height: 20),
 
                 // Title Field
-                Text('Title', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                const SizedBox(height: 6),
+                Text('Title', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                const SizedBox(height: 8),
                 TextFormField(
                   controller: _titleController,
                   textInputAction: TextInputAction.next,
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
                   decoration: const InputDecoration(
                     hintText: 'e.g. How to set up Wireshark for local packet sniffing?',
                   ),
@@ -165,11 +175,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 const SizedBox(height: 16),
 
                 // Content Field
-                Text('Content / Explanation', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                const SizedBox(height: 6),
+                Text('Content / Explanation', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                const SizedBox(height: 8),
                 TextFormField(
                   controller: _contentController,
                   maxLines: 8,
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
                   decoration: const InputDecoration(
                     hintText: 'Share your question details, technical tutorial, project repo link, or learning insight...',
                   ),
@@ -184,17 +195,27 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 const SizedBox(height: 16),
 
                 // Tags Field
-                Text('Tags (comma separated)', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                const SizedBox(height: 6),
+                Text('Tags (comma separated)', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                const SizedBox(height: 8),
                 TextFormField(
                   controller: _tagsController,
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
                   decoration: const InputDecoration(
                     hintText: 'e.g. Cybersecurity, Wireshark, Linux, CTF',
                     prefixIcon: Icon(Icons.tag_rounded, size: 20),
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
+
+                AppButton(
+                  text: 'Publish Post',
+                  onPressed: _handlePublish,
+                  isLoading: _isPublishing,
+                  variant: AppButtonVariant.primary,
+                ),
+
+                const SizedBox(height: 20),
               ],
             ),
           ),

@@ -1,19 +1,36 @@
 import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
-import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/riko_empty_state.dart';
+import '../../../core/widgets/riko_expression.dart';
 import '../widgets/opportunity_card.dart';
+import 'explore_screen.dart';
 
 /// Screen listing all opportunities bookmarked/saved by the student.
 class SavedOpportunitiesScreen extends StatelessWidget {
-  const SavedOpportunitiesScreen({super.key});
+  final bool showBackButton;
+
+  const SavedOpportunitiesScreen({
+    super.key,
+    this.showBackButton = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Saved Opportunities'),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        automaticallyImplyLeading: showBackButton,
+        title: Text(
+          'Saved Opportunities',
+          style: AppTextStyles.headlineSmall.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
+        ),
       ),
       body: SafeArea(
         child: ValueListenableBuilder(
@@ -25,23 +42,42 @@ class SavedOpportunitiesScreen extends StatelessWidget {
                 .toList();
 
             if (savedOpps.isEmpty) {
-              return EmptyState(
-                icon: Icons.bookmark_border_rounded,
+              return RikoEmptyState(
+                expression: RikoExpression.sitting,
                 title: 'No saved opportunities yet',
-                description: 'Explore hackathons, internships, and contests, then save the ones you want to revisit before deadlines.',
+                message: "Riko hasn't found any saved bookmarks in your scout library. Let's find something interesting!",
                 actionLabel: 'Explore Opportunities',
-                onAction: () => Navigator.of(context).pop(),
+                actionIcon: Icons.explore_rounded,
+                onAction: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ExploreScreen()),
+                  );
+                },
               );
             }
 
-            return ListView.separated(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              itemCount: savedOpps.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 14),
-              itemBuilder: (context, index) {
-                return OpportunityCard(opportunity: savedOpps[index]);
-              },
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Text(
+                    '${savedOpps.length} bookmarked opportunities',
+                    style: AppTextStyles.labelMedium.copyWith(color: AppColors.softLavender),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.separated(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    itemCount: savedOpps.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      return OpportunityCard(opportunity: savedOpps[index]);
+                    },
+                  ),
+                ),
+              ],
             );
           },
         ),
