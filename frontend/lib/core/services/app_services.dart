@@ -15,7 +15,7 @@ class AppServices {
   static late CommunityRepository community;
   static late ConnectRepository connect;
   static late NotificationRepository notifications;
-  static final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
+  static final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.dark);
 
   static const String _themeModeKey = 'linkup_theme_mode_v2';
   static bool _initialized = false;
@@ -40,7 +40,7 @@ class AppServices {
     } else if (savedTheme == 'light') {
       themeModeNotifier.value = ThemeMode.light;
     } else {
-      themeModeNotifier.value = ThemeMode.system;
+      themeModeNotifier.value = ThemeMode.dark;
     }
   }
 

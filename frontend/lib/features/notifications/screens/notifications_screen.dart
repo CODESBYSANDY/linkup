@@ -1,45 +1,33 @@
 import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
-import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/riko_avatar.dart';
+import '../../../core/widgets/riko_empty_state.dart';
+import '../../../core/widgets/riko_expression.dart';
 import '../../../data/models/notification_item.dart';
 
-/// Screen displaying student activity notifications and read state management.
+/// Screen displaying student activity & Riko Scout notifications.
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
-  IconData _getTypeIcon(NotificationType type) {
+  RikoExpression _getExpressionForType(NotificationType type) {
     switch (type) {
-      case NotificationType.connection:
-        return Icons.person_add_rounded;
-      case NotificationType.like:
-        return Icons.arrow_upward_rounded;
-      case NotificationType.comment:
-        return Icons.chat_bubble_rounded;
       case NotificationType.opportunity:
-        return Icons.lightbulb_rounded;
-      case NotificationType.group:
-        return Icons.groups_rounded;
-      case NotificationType.mentor:
-        return Icons.school_rounded;
-    }
-  }
-
-  Color _getTypeColor(NotificationType type) {
-    switch (type) {
+        return RikoExpression.excited;
       case NotificationType.connection:
-        return AppColors.secondary;
+        return RikoExpression.waving;
       case NotificationType.like:
-        return AppColors.primary;
+        return RikoExpression.celebrating;
       case NotificationType.comment:
-        return const Color(0xFF7C3AED);
-      case NotificationType.opportunity:
-        return AppColors.warning;
-      case NotificationType.group:
-        return AppColors.primaryDark;
+        return RikoExpression.helpful;
       case NotificationType.mentor:
-        return AppColors.info;
+        return RikoExpression.usingTablet;
+      case NotificationType.group:
+        return RikoExpression.happy;
+      case NotificationType.system:
+        return RikoExpression.surprised;
     }
   }
 
@@ -48,7 +36,19 @@ class NotificationsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Notifications'),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'Notifications',
+          style: AppTextStyles.headlineSmall.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -56,99 +56,127 @@ class NotificationsScreen extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('All notifications marked as read'),
-                  duration: Duration(seconds: 1),
+                  duration: Duration(milliseconds: 900),
+                  backgroundColor: AppColors.surfaceElevated,
                 ),
               );
             },
-            child: const Text('Mark all as read', style: AppTextStyles.labelMedium),
+            child: Text(
+              'Mark all read',
+              style: AppTextStyles.labelMedium.copyWith(color: AppColors.softLavender),
+            ),
           ),
           const SizedBox(width: 8),
         ],
       ),
       body: SafeArea(
-        child: ValueListenableBuilder(
-          valueListenable: AppServices.notifications.notificationsNotifier,
-          builder: (context, notifs, _) {
-            if (notifs.isEmpty) {
-              return const EmptyState(
-                icon: Icons.notifications_none_rounded,
-                title: 'No notifications',
-                description: 'You are all caught up! Updates regarding opportunities, upvotes, and groups will appear here.',
-              );
-            }
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await AppServices.notifications.refresh();
+          },
+          color: AppColors.primaryBright,
+          backgroundColor: AppColors.surface,
+          child: ValueListenableBuilder(
+            valueListenable: AppServices.notifications.notificationsNotifier,
+            builder: (context, notifs, _) {
+              if (notifs.isEmpty) {
+                return ListView(
+                  physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                  children: const [
+                    SizedBox(height: 60),
+                    RikoEmptyState(
+                      expression: RikoExpression.sleeping,
+                      title: 'All caught up!',
+                      message: 'No new notifications right now. Riko is scouting opportunities in the background.',
+                    ),
+                  ],
+                );
+              }
 
-            return ListView.separated(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              itemCount: notifs.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 10),
+              return ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                itemCount: notifs.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 final notif = notifs[index];
-                return InkWell(
-                  onTap: () {
-                    AppServices.notifications.markAsRead(notif.id);
-                  },
-                  borderRadius: BorderRadius.circular(14),
-                  child: Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: notif.isRead ? AppColors.surface : AppColors.softTeal.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: notif.isRead ? AppColors.border : AppColors.primary.withValues(alpha: 0.4),
+                final expression = _getExpressionForType(notif.type);
+
+                return Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      AppServices.notifications.markAsRead(notif.id);
+                    },
+                    borderRadius: AppRadii.cardRadius,
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: notif.isRead ? AppColors.surface : const Color(0xFF191B42),
+                        borderRadius: AppRadii.cardRadius,
+                        border: Border.all(
+                          color: notif.isRead
+                              ? AppColors.border
+                              : AppColors.primaryBright.withValues(alpha: 0.5),
+                          width: 1,
+                        ),
                       ),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: notif.isRead ? AppColors.surfaceSubtle : AppColors.surface,
-                            borderRadius: BorderRadius.circular(10),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          RikoAvatar(
+                            expression: expression,
+                            size: 40,
+                            showGlow: !notif.isRead,
                           ),
-                          child: Icon(
-                            _getTypeIcon(notif.type),
-                            color: _getTypeColor(notif.type),
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      notif.title,
-                                      style: AppTextStyles.titleSmall.copyWith(
-                                        fontWeight: notif.isRead ? FontWeight.w500 : FontWeight.w700,
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        notif.title,
+                                        style: AppTextStyles.titleSmall.copyWith(
+                                          fontWeight: notif.isRead ? FontWeight.w600 : FontWeight.w800,
+                                          color: AppColors.textPrimary,
+                                        ),
                                       ),
                                     ),
+                                    if (!notif.isRead)
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: AppColors.primaryBright,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  notif.message,
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.textSecondary,
                                   ),
-                                  if (!notif.isRead)
-                                    Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: const BoxDecoration(
-                                        color: AppColors.primary,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(notif.message, style: AppTextStyles.bodySmall),
-                              const SizedBox(height: 6),
-                              Text(notif.timeAgo, style: AppTextStyles.caption),
-                            ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  notif.timeAgo,
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.textTertiary,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -157,6 +185,7 @@ class NotificationsScreen extends StatelessWidget {
           },
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

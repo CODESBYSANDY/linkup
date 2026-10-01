@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
-import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/riko_empty_state.dart';
+import '../../../core/widgets/riko_expression.dart';
 import 'public_profile_screen.dart';
 
 /// Screen displaying the student's connections and incoming pending requests.
@@ -33,13 +35,27 @@ class _ConnectionsListScreenState extends State<ConnectionsListScreen> with Sing
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('My Network'),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'My Network',
+          style: AppTextStyles.headlineSmall.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
+        ),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: AppColors.primaryDark,
-          unselectedLabelColor: AppColors.textSecondary,
-          indicatorColor: AppColors.primary,
+          labelColor: AppColors.textPrimary,
+          unselectedLabelColor: AppColors.textMuted,
+          indicatorColor: AppColors.primaryBright,
           indicatorWeight: 3,
+          labelStyle: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700),
+          unselectedLabelStyle: AppTextStyles.labelMedium,
           tabs: const [
             Tab(text: 'Connections'),
             Tab(text: 'Pending Requests'),
@@ -66,10 +82,10 @@ class _ConnectionsListScreenState extends State<ConnectionsListScreen> with Sing
               children: [
                 // Connections Tab
                 connectedPeers.isEmpty
-                    ? const EmptyState(
-                        icon: Icons.people_outline_rounded,
+                    ? const RikoEmptyState(
+                        expression: RikoExpression.waving,
                         title: 'No connections yet',
-                        description: 'Explore peers in the Connect tab with matching skills and connect with them.',
+                        message: 'Explore student builders in the Connect tab to expand your tech network.',
                       )
                     : ListView.separated(
                         physics: const BouncingScrollPhysics(),
@@ -82,7 +98,7 @@ class _ConnectionsListScreenState extends State<ConnectionsListScreen> with Sing
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
                               color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: AppRadii.cardRadius,
                               border: Border.all(color: AppColors.border),
                             ),
                             child: Row(
@@ -91,9 +107,18 @@ class _ConnectionsListScreenState extends State<ConnectionsListScreen> with Sing
                                   onTap: () => Navigator.of(context).push(
                                     MaterialPageRoute(builder: (_) => PublicProfileScreen(personId: peer.id)),
                                   ),
-                                  child: CircleAvatar(
-                                    backgroundColor: AppColors.softTeal,
-                                    child: Text(peer.avatarInitials, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryDark)),
+                                  child: Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(alpha: 0.18),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      peer.avatarInitials,
+                                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryLight),
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -105,8 +130,9 @@ class _ConnectionsListScreenState extends State<ConnectionsListScreen> with Sing
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(peer.name, style: AppTextStyles.titleSmall),
-                                        Text(peer.role, style: AppTextStyles.caption),
+                                        Text(peer.name, style: AppTextStyles.titleMedium),
+                                        const SizedBox(height: 2),
+                                        Text(peer.role, style: AppTextStyles.caption.copyWith(color: AppColors.textMuted)),
                                       ],
                                     ),
                                   ),
@@ -123,8 +149,9 @@ class _ConnectionsListScreenState extends State<ConnectionsListScreen> with Sing
                                   style: OutlinedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                     minimumSize: Size.zero,
+                                    side: const BorderSide(color: AppColors.border),
                                   ),
-                                  child: const Text('Disconnect', style: AppTextStyles.labelSmall),
+                                  child: Text('Disconnect', style: AppTextStyles.labelSmall.copyWith(color: AppColors.textMuted)),
                                 ),
                               ],
                             ),
@@ -134,10 +161,10 @@ class _ConnectionsListScreenState extends State<ConnectionsListScreen> with Sing
 
                 // Pending Requests Tab
                 pendingPeers.isEmpty
-                    ? const EmptyState(
-                        icon: Icons.mark_email_read_outlined,
+                    ? const RikoEmptyState(
+                        expression: RikoExpression.sleeping,
                         title: 'No pending requests',
-                        description: 'When other students send you connection requests, they will show up here.',
+                        message: 'When other students send you connection requests, they will show up here.',
                       )
                     : ListView.separated(
                         physics: const BouncingScrollPhysics(),
@@ -147,10 +174,10 @@ class _ConnectionsListScreenState extends State<ConnectionsListScreen> with Sing
                         itemBuilder: (context, index) {
                           final peer = pendingPeers[index];
                           return Container(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: AppRadii.cardRadius,
                               border: Border.all(color: AppColors.border),
                             ),
                             child: Column(
@@ -158,23 +185,33 @@ class _ConnectionsListScreenState extends State<ConnectionsListScreen> with Sing
                               children: [
                                 Row(
                                   children: [
-                                    CircleAvatar(
-                                      backgroundColor: AppColors.softBlue,
-                                      child: Text(peer.avatarInitials, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.secondary)),
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.secondary.withValues(alpha: 0.18),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        peer.avatarInitials,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.secondaryLight),
+                                      ),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text(peer.name, style: AppTextStyles.titleSmall),
-                                          Text('${peer.branch} · ${peer.year}', style: AppTextStyles.caption),
+                                          Text(peer.name, style: AppTextStyles.titleMedium),
+                                          const SizedBox(height: 2),
+                                          Text('${peer.branch} · ${peer.year}', style: AppTextStyles.caption.copyWith(color: AppColors.textMuted)),
                                         ],
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 14),
                                 Row(
                                   children: [
                                     Expanded(
@@ -188,9 +225,10 @@ class _ConnectionsListScreenState extends State<ConnectionsListScreen> with Sing
                                           }
                                         },
                                         style: OutlinedButton.styleFrom(
-                                          padding: const EdgeInsets.symmetric(vertical: 8),
+                                          padding: const EdgeInsets.symmetric(vertical: 10),
+                                          side: const BorderSide(color: AppColors.border),
                                         ),
-                                        child: const Text('Decline'),
+                                        child: Text('Decline', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textMuted)),
                                       ),
                                     ),
                                     const SizedBox(width: 10),
@@ -205,9 +243,10 @@ class _ConnectionsListScreenState extends State<ConnectionsListScreen> with Sing
                                           }
                                         },
                                         style: ElevatedButton.styleFrom(
-                                          padding: const EdgeInsets.symmetric(vertical: 8),
+                                          backgroundColor: AppColors.primary,
+                                          padding: const EdgeInsets.symmetric(vertical: 10),
                                         ),
-                                        child: const Text('Accept'),
+                                        child: const Text('Accept', style: TextStyle(fontWeight: FontWeight.w700)),
                                       ),
                                     ),
                                   ],

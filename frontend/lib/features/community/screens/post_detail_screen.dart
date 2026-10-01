@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
+import '../../../core/widgets/report_dialog.dart';
 import '../../../data/models/post.dart';
 import '../../../data/models/comment.dart';
 import '../../profile/screens/public_profile_screen.dart';
@@ -76,7 +78,19 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         return Scaffold(
           backgroundColor: AppColors.background,
           appBar: AppBar(
-            title: const Text('Discussion'),
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: Text(
+              'Discussion',
+              style: AppTextStyles.headlineSmall.copyWith(
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
             actions: [
               ValueListenableBuilder(
                 valueListenable: AppServices.auth.userNotifier,
@@ -85,7 +99,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   return IconButton(
                     icon: Icon(
                       isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                      color: isSaved ? AppColors.primary : AppColors.textPrimary,
+                      color: isSaved ? AppColors.primaryBright : AppColors.textPrimary,
                     ),
                     onPressed: () async {
                       final saved = await AppServices.auth.toggleSavePost(post.id);
@@ -94,6 +108,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           SnackBar(
                             content: Text(saved ? 'Post saved to library' : 'Removed from saved'),
                             duration: const Duration(seconds: 1),
+                            backgroundColor: AppColors.surfaceElevated,
                           ),
                         );
                       }
@@ -102,14 +117,81 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 },
               ),
               IconButton(
-                icon: const Icon(Icons.share_outlined),
+                icon: const Icon(Icons.share_outlined, color: AppColors.textPrimary),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Post link copied to clipboard!')),
+                    const SnackBar(
+                      content: Text('Post link copied to clipboard!'),
+                      backgroundColor: AppColors.surfaceElevated,
+                    ),
                   );
                 },
               ),
-              const SizedBox(width: 8),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert_rounded, color: AppColors.textPrimary),
+                color: AppColors.surfaceElevated,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                onSelected: (value) async {
+                  if (value == 'report') {
+                    showReportBottomSheet(
+                      context,
+                      targetType: 'post',
+                      targetId: post.id,
+                      targetTitle: post.title,
+                    );
+                  } else if (value == 'delete') {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor: AppColors.surface,
+                        title: const Text('Delete Post?'),
+                        content: const Text('Are you sure you want to delete this post? This cannot be undone.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true && context.mounted) {
+                      await AppServices.community.deletePost(post.id);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
+                    }
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'report',
+                    child: Row(
+                      children: [
+                        Icon(Icons.flag_outlined, size: 16, color: AppColors.textSecondary),
+                        SizedBox(width: 8),
+                        Text('Report Post', style: AppTextStyles.bodySmall),
+                      ],
+                    ),
+                  ),
+                  if (post.authorId == currentUserId)
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline_rounded, size: 16, color: AppColors.error),
+                          SizedBox(width: 8),
+                          Text('Delete Post', style: TextStyle(color: AppColors.error, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 4),
             ],
           ),
           bottomNavigationBar: Container(
@@ -127,29 +209,42 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      controller: _commentController,
-                      decoration: InputDecoration(
-                        hintText: 'Add an answer or comment...',
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(color: AppColors.border),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(color: AppColors.border),
+                    child: Container(
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceSecondary,
+                        borderRadius: AppRadii.inputRadius,
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: TextField(
+                        controller: _commentController,
+                        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+                        decoration: InputDecoration(
+                          hintText: 'Add an answer or comment...',
+                          hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textTertiary),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  IconButton.filled(
-                    onPressed: () => _handleAddComment(post),
-                    icon: const Icon(Icons.send_rounded, size: 18),
-                    style: IconButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.textInverse,
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _handleAddComment(post),
+                      borderRadius: BorderRadius.circular(14),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.send_rounded, size: 18, color: Colors.white),
+                      ),
                     ),
                   ),
                 ],
@@ -166,7 +261,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: AppRadii.cardRadius,
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
@@ -187,12 +282,19 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                 ),
                               );
                             },
-                            child: CircleAvatar(
-                              radius: 20,
-                              backgroundColor: AppColors.softTeal,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                                ),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              alignment: Alignment.center,
                               child: Text(
                                 post.authorAvatar,
-                                style: AppTextStyles.titleMedium.copyWith(color: AppColors.primaryDark),
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
@@ -214,21 +316,22 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(post.authorName, style: AppTextStyles.titleMedium),
-                                  Text('${post.authorRole} · ${post.timeAgo}', style: AppTextStyles.caption),
+                                  Text('${post.authorRole} · ${post.timeAgo}', style: AppTextStyles.caption.copyWith(color: AppColors.textMuted)),
                                 ],
                               ),
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.softTeal,
-                              borderRadius: BorderRadius.circular(6),
+                              color: AppColors.primary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.primaryBright.withValues(alpha: 0.35)),
                             ),
                             child: Text(
                               post.type.label,
                               style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.primaryDark,
+                                color: AppColors.primaryLight,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -246,7 +349,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       // Content Body
                       Text(
                         post.content,
-                        style: AppTextStyles.bodyMedium.copyWith(height: 1.6),
+                        style: AppTextStyles.bodyMedium.copyWith(height: 1.6, color: AppColors.textSecondary),
                       ),
 
                       const SizedBox(height: 16),
@@ -259,16 +362,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           return Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceSubtle,
+                              color: AppColors.surfaceSecondary,
                               borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.borderSubtle),
                             ),
-                            child: Text('#$t', style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary)),
+                            child: Text('#$t', style: AppTextStyles.caption.copyWith(color: AppColors.softLavender)),
                           );
                         }).toList(),
                       ),
 
                       const SizedBox(height: 16),
-                      const Divider(),
+                      const Divider(color: AppColors.borderSubtle),
                       const SizedBox(height: 8),
 
                       // Actions Row
@@ -281,21 +385,21 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                             },
                             icon: Icon(
                               isLiked ? Icons.arrow_upward_rounded : Icons.arrow_upward_outlined,
-                              size: 18,
+                              size: 16,
                             ),
                             label: Text(
-                              isLiked ? 'Upvoted (${post.likesCount})' : 'Upvote (${post.likesCount})',
-                              style: AppTextStyles.labelMedium,
+                              isLiked ? 'Upvoted (${post.upvotes})' : 'Upvote (${post.upvotes})',
+                              style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.w700),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: isLiked ? AppColors.primary : AppColors.surfaceSubtle,
-                              foregroundColor: isLiked ? AppColors.textInverse : AppColors.textPrimary,
+                              backgroundColor: isLiked ? AppColors.primary : AppColors.surfaceSecondary,
+                              foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                             ),
                           ),
                           Text(
                             '${post.commentsCount} Comments',
-                            style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary),
+                            style: AppTextStyles.labelMedium.copyWith(color: AppColors.textMuted),
                           ),
                         ],
                       ),
@@ -315,7 +419,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: AppRadii.cardRadius,
                       border: Border.all(color: AppColors.border),
                     ),
                     child: Center(
@@ -325,12 +429,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           const SizedBox(height: 8),
                           Text(
                             'No answers or comments yet.',
-                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             'Be the first to share your knowledge!',
-                            style: AppTextStyles.caption,
+                            style: AppTextStyles.caption.copyWith(color: AppColors.softLavender),
                           ),
                         ],
                       ),
@@ -344,7 +448,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: AppRadii.cardRadius,
                           border: Border.all(color: AppColors.border),
                         ),
                         child: Column(
@@ -352,12 +456,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           children: [
                             Row(
                               children: [
-                                CircleAvatar(
-                                  radius: 14,
-                                  backgroundColor: AppColors.softBlue,
+                                Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.secondary.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  alignment: Alignment.center,
                                   child: Text(
                                     comment.authorAvatar,
-                                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.secondary),
+                                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.secondaryLight),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -366,14 +475,55 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(comment.authorName, style: AppTextStyles.titleSmall),
-                                      Text('${comment.authorRole} · ${comment.timeAgo}', style: AppTextStyles.caption),
+                                      Text('${comment.authorRole} · ${comment.timeAgo}', style: AppTextStyles.caption.copyWith(color: AppColors.textMuted)),
                                     ],
                                   ),
+                                ),
+                                PopupMenuButton<String>(
+                                  icon: const Icon(Icons.more_horiz_rounded, size: 16, color: AppColors.textMuted),
+                                  padding: EdgeInsets.zero,
+                                  color: AppColors.surfaceElevated,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  onSelected: (val) async {
+                                    if (val == 'report') {
+                                      showReportBottomSheet(
+                                        context,
+                                        targetType: 'comment',
+                                        targetId: comment.id,
+                                        targetTitle: comment.content,
+                                      );
+                                    } else if (val == 'delete') {
+                                      await AppServices.community.deleteComment(post.id, comment.id);
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(
+                                      value: 'report',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.flag_outlined, size: 15, color: AppColors.textSecondary),
+                                          SizedBox(width: 6),
+                                          Text('Report', style: AppTextStyles.bodySmall),
+                                        ],
+                                      ),
+                                    ),
+                                    if (comment.authorName == (AppServices.auth.currentUser?.name ?? ''))
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.delete_outline_rounded, size: 15, color: AppColors.error),
+                                            SizedBox(width: 6),
+                                            Text('Delete', style: TextStyle(color: AppColors.error, fontSize: 13)),
+                                          ],
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
-                            Text(comment.content, style: AppTextStyles.bodyMedium),
+                            Text(comment.content, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
                           ],
                         ),
                       ),

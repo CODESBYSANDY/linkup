@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../data/models/user_profile.dart';
 
 /// Screen allowing the student to edit their local profile information.
@@ -63,7 +64,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       year: _selectedYear,
       bio: _bioController.text.trim(),
       skills: skillsList,
-      avatarInitials: initials.isNotEmpty ? initials : 'SU',
+      avatarInitials: initials.isNotEmpty ? initials : 'SB',
     );
 
     await AppServices.auth.updateProfile(updated);
@@ -83,11 +84,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'Edit Profile',
+          style: AppTextStyles.headlineSmall.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: _handleSave,
-            child: const Text('Save', style: AppTextStyles.labelLarge),
+            child: Text(
+              'Save',
+              style: AppTextStyles.labelLarge.copyWith(color: AppColors.softLavender),
+            ),
           ),
           const SizedBox(width: 8),
         ],
@@ -107,19 +123,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     height: 72,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [AppColors.primary, AppColors.secondary],
+                        colors: [AppColors.primaryDark, AppColors.secondary],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: AppColors.primaryBright, width: 1.5),
                     ),
                     child: Center(
                       child: Text(
                         _nameController.text.isNotEmpty
                             ? _nameController.text.trim().split(' ').map((e) => e.isNotEmpty ? e[0].toUpperCase() : '').take(2).join()
-                            : 'SU',
+                            : 'SB',
                         style: const TextStyle(
-                          color: AppColors.textInverse,
+                          color: AppColors.textPrimary,
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
@@ -131,36 +148,45 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: 24),
 
                 // Name
-                Text('Full Name', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                const SizedBox(height: 6),
+                Text('Full Name', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameController,
                   onChanged: (_) => setState(() {}),
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
                   validator: (val) => val == null || val.trim().isEmpty ? 'Name cannot be empty' : null,
                 ),
 
                 const SizedBox(height: 16),
 
                 // College
-                Text('College / University', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                const SizedBox(height: 6),
-                TextFormField(controller: _collegeController),
+                Text('College / University', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _collegeController,
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+                ),
 
                 const SizedBox(height: 16),
 
                 // Branch
-                Text('Branch / Major', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                const SizedBox(height: 6),
-                TextFormField(controller: _branchController),
+                Text('Branch / Major', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _branchController,
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+                ),
 
                 const SizedBox(height: 16),
 
                 // Year
-                Text('Year of Study', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                const SizedBox(height: 6),
+                Text('Year of Study', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   initialValue: _selectedYear,
-                  items: _yearOptions.map((y) => DropdownMenuItem(value: y, child: Text(y))).toList(),
+                  dropdownColor: AppColors.surfaceSecondary,
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+                  items: _yearOptions.map((y) => DropdownMenuItem(value: y, child: Text(y, style: const TextStyle(color: AppColors.textPrimary)))).toList(),
                   onChanged: (val) {
                     if (val != null) setState(() => _selectedYear = val);
                   },
@@ -169,25 +195,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: 16),
 
                 // Skills
-                Text('Skills (comma separated)', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                const SizedBox(height: 6),
-                TextFormField(controller: _skillsController),
+                Text('Skills (comma separated)', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _skillsController,
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+                ),
 
                 const SizedBox(height: 16),
 
                 // Bio
-                Text('Bio', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                const SizedBox(height: 6),
+                Text('Bio', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                const SizedBox(height: 8),
                 TextFormField(
                   controller: _bioController,
                   maxLines: 4,
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
 
-                ElevatedButton(
+                AppButton(
+                  text: 'Save Profile Changes',
                   onPressed: _handleSave,
-                  child: const Center(child: Text('Save Profile Changes', style: AppTextStyles.labelLarge)),
+                  variant: AppButtonVariant.primary,
                 ),
 
                 const SizedBox(height: 20),

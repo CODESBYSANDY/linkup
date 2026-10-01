@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
 import '../../../data/models/mentor.dart';
 import '../../mentors/screens/mentor_detail_screen.dart';
 
-/// Reusable interactive Mentor card.
+/// Reusable interactive Mentor card with Riko styling.
 class MentorCard extends StatelessWidget {
   final Mentor mentor;
 
@@ -22,160 +23,181 @@ class MentorCard extends StatelessWidget {
         final isConnected = user?.connectedUserIds.contains(mentor.id) ?? false;
         final isRequested = user?.requestedMentorIds.contains(mentor.id) ?? false;
 
-        return InkWell(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => MentorDetailScreen(mentorId: mentor.id),
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => MentorDetailScreen(mentorId: mentor.id),
+                ),
+              );
+            },
+            borderRadius: AppRadii.cardRadius,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: AppRadii.cardRadius,
+                border: Border.all(color: AppColors.border),
               ),
-            );
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: AppColors.softTeal,
-                      child: Text(
-                        mentor.name.isNotEmpty ? mentor.name[0] : 'M',
-                        style: AppTextStyles.headlineSmall.copyWith(color: AppColors.primaryDark),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          mentor.name.isNotEmpty ? mentor.name[0] : 'M',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  mentor.name,
-                                  style: AppTextStyles.titleMedium,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppColors.warningSoft,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  mentor.badge,
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.warning,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 10,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    mentor.name,
+                                    style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            mentor.role,
-                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            mentor.college,
-                            style: AppTextStyles.caption,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                // Topics Wrap
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: mentor.skills.map((t) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppColors.softTeal,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        t,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.primaryDark,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-
-                const SizedBox(height: 14),
-
-                // Action Buttons Row (Learn & Connect)
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => MentorDetailScreen(mentorId: mentor.id),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.18),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: AppColors.primaryBright.withValues(alpha: 0.3)),
+                                  ),
+                                  child: Text(
+                                    mentor.badge,
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.primaryLight,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                        icon: const Icon(Icons.school_outlined, size: 16),
-                        label: Text(
-                          isRequested ? 'Requested' : 'Learn',
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: isRequested ? AppColors.primaryDark : AppColors.textPrimary,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: isRequested ? AppColors.softTeal : Colors.transparent,
+                            const SizedBox(height: 2),
+                            Text(
+                              mentor.role,
+                              style: AppTextStyles.bodySmall.copyWith(color: AppColors.softLavender),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              mentor.college,
+                              style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          final res = await AppServices.auth.toggleConnectUser(mentor.id);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).clearSnackBars();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(res == 'Pending' ? 'Connection request sent' : 'Connected!'),
-                                duration: const Duration(seconds: 1),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Topics Wrap
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: mentor.skills.map((t) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceSecondary,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: AppColors.borderSubtle),
+                        ),
+                        child: Text(
+                          t,
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Action Buttons Row (Learn & Connect)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => MentorDetailScreen(mentorId: mentor.id),
                               ),
                             );
-                          }
-                        },
-                        icon: Icon(isConnected ? Icons.check_rounded : Icons.person_add_outlined, size: 16),
-                        label: Text(
-                          isConnected ? 'Connected' : 'Connect',
-                          style: AppTextStyles.labelMedium.copyWith(color: AppColors.textInverse),
+                          },
+                          icon: const Icon(Icons.school_outlined, size: 16),
+                          label: Text(
+                            isRequested ? 'Requested' : 'Learn',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: isRequested ? AppColors.softLavender : AppColors.textPrimary,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppColors.border),
+                            backgroundColor: isRequested ? AppColors.surfaceSecondary : Colors.transparent,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            final res = await AppServices.auth.toggleConnectUser(mentor.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).clearSnackBars();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(res == 'Pending' ? 'Connection request sent' : 'Connected!'),
+                                  duration: const Duration(seconds: 1),
+                                  backgroundColor: AppColors.surfaceElevated,
+                                ),
+                              );
+                            }
+                          },
+                          icon: Icon(isConnected ? Icons.check_rounded : Icons.person_add_outlined, size: 16),
+                          label: Text(
+                            isConnected ? 'Connected' : 'Connect',
+                            style: AppTextStyles.labelMedium.copyWith(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );

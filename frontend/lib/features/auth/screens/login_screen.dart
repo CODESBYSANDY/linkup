@@ -3,8 +3,12 @@ import '../../../app/routes.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
+import '../../../core/widgets/app_background.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/riko_avatar.dart';
+import '../../../core/widgets/riko_expression.dart';
 
-/// Screen allowing students to log in locally or continue as guest.
+/// Screen allowing students to log in locally or continue with Google / Guest.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -30,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 400)); // UI feedback
+    await Future.delayed(const Duration(milliseconds: 350));
     await AppServices.auth.login(
       _emailController.text.trim(),
       _passwordController.text.trim(),
@@ -38,7 +42,11 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     setState(() => _isLoading = false);
 
-    Navigator.of(context).pushReplacementNamed(AppRoutes.main);
+    if (AppServices.auth.currentUser?.isOnboarded == false) {
+      Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
+    } else {
+      Navigator.of(context).pushReplacementNamed(AppRoutes.main);
+    }
   }
 
   Future<void> _handleGuestLogin() async {
@@ -53,10 +61,12 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
+      body: AppBackground(
+        showAmbientGlow: true,
+        showParticles: true,
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Form(
@@ -64,35 +74,36 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Brand Badge
+                    // Riko Mascot Hero Badge
                     Center(
-                      child: Container(
-                        width: 58,
-                        height: 58,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [AppColors.primary, AppColors.secondary],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                      child: Column(
+                        children: [
+                          const RikoAvatar(
+                            expression: RikoExpression.happy,
+                            size: 78,
+                            showGlow: true,
+                            showBadge: true,
                           ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: AppColors.shadow,
-                              blurRadius: 10,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.hub_rounded,
-                          color: AppColors.textInverse,
-                          size: 32,
-                        ),
+                          const SizedBox(height: 14),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Riko',
+                                style: AppTextStyles.headlineMedium.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.auto_awesome, size: 16, color: AppColors.primaryBright),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
                     // Title & Subtitle
                     const Text(
@@ -102,22 +113,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Sign in to explore opportunities and connect with your peers',
+                      'Continue exploring opportunities with Riko.',
                       textAlign: TextAlign.center,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textMuted,
                       ),
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 28),
 
                     // Email Field
-                    Text('Student Email', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                    const SizedBox(height: 6),
+                    Text('Student Email', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
+                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
                       decoration: const InputDecoration(
                         hintText: 'e.g. name@student.college.edu',
                         prefixIcon: Icon(Icons.email_outlined, size: 20),
@@ -133,16 +145,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
 
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 16),
 
                     // Password Field
-                    Text('Password', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
-                    const SizedBox(height: 6),
+                    Text('Password', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _handleLogin(),
+                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
                       decoration: InputDecoration(
                         hintText: 'Enter your password',
                         prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
@@ -150,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           icon: Icon(
                             _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
                             size: 20,
-                            color: AppColors.textSecondary,
+                            color: AppColors.textMuted,
                           ),
                           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
@@ -166,44 +179,33 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 24),
 
                     // Sign In Button
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _handleLogin,
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Text('Sign In', style: AppTextStyles.labelLarge),
+                    AppButton(
+                      text: 'Sign In',
+                      onPressed: _handleLogin,
+                      isLoading: _isLoading,
+                      variant: AppButtonVariant.primary,
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
 
                     // Google Mock Button
-                    OutlinedButton.icon(
+                    AppButton(
+                      text: 'Continue with Google',
                       onPressed: _handleGuestLogin,
-                      icon: const Icon(Icons.g_mobiledata_rounded, size: 24, color: AppColors.secondary),
-                      label: const Text('Continue with Google', style: AppTextStyles.labelLarge),
+                      icon: Icons.g_mobiledata_rounded,
+                      variant: AppButtonVariant.secondary,
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
 
                     // Continue as Guest Button
-                    TextButton(
+                    AppButton(
+                      text: 'Continue as Guest',
                       onPressed: _handleGuestLogin,
-                      child: Text(
-                        'Continue as Guest',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.textSecondary,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
+                      variant: AppButtonVariant.ghost,
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
                     // Don't have an account
                     Center(
@@ -213,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Text(
                             "Don't have an account? ",
-                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted),
                           ),
                           GestureDetector(
                             onTap: () {
@@ -222,7 +224,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               'Create Account',
                               style: AppTextStyles.labelMedium.copyWith(
-                                color: AppColors.primaryDark,
+                                color: AppColors.softLavender,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),

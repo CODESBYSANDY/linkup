@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
+import '../../../core/widgets/riko_avatar.dart';
+import '../../../core/widgets/riko_expression.dart';
 import '../../../data/models/user_profile.dart';
 import '../../opportunities/screens/saved_opportunities_screen.dart';
 import '../../notifications/screens/notifications_screen.dart';
@@ -18,10 +21,18 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('My Profile'),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        title: Text(
+          'My Profile',
+          style: AppTextStyles.headlineSmall.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit_outlined),
+            icon: const Icon(Icons.edit_outlined, color: AppColors.textPrimary),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const EditProfileScreen()),
@@ -30,7 +41,7 @@ class ProfileScreen extends StatelessWidget {
             tooltip: 'Edit Profile',
           ),
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(Icons.settings_outlined, color: AppColors.textPrimary),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const SettingsScreen()),
@@ -42,31 +53,32 @@ class ProfileScreen extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: ValueListenableBuilder(
-          valueListenable: AppServices.auth.userNotifier,
-          builder: (context, user, _) {
-            final profile = user ?? UserProfile.defaultDemo();
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await AppServices.auth.syncProfileFromBackend();
+            await AppServices.opportunities.fetchSavedOpportunities();
+            await AppServices.community.fetchSavedPosts();
+          },
+          color: AppColors.primaryBright,
+          backgroundColor: AppColors.surface,
+          child: ValueListenableBuilder(
+            valueListenable: AppServices.auth.userNotifier,
+            builder: (context, user, _) {
+              final profile = user ?? UserProfile.defaultDemo();
 
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // User Profile Header Card
+              return SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // User Profile Header Card
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: AppRadii.cardRadius,
                       border: Border.all(color: AppColors.border),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: AppColors.shadow,
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
                     ),
                     child: Column(
                       children: [
@@ -77,19 +89,20 @@ class ProfileScreen extends StatelessWidget {
                               height: 64,
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [AppColors.primary, AppColors.secondary],
+                                  colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
                                 borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: AppColors.primaryBright.withValues(alpha: 0.6), width: 1.5),
                               ),
                               child: Center(
                                 child: Text(
                                   profile.avatarInitials,
                                   style: const TextStyle(
-                                    color: AppColors.textInverse,
+                                    color: Colors.white,
                                     fontSize: 22,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
                               ),
@@ -99,19 +112,25 @@ class ProfileScreen extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(profile.name, style: AppTextStyles.headlineSmall),
-                                  const SizedBox(height: 2),
+                                  Text(
+                                    profile.name,
+                                    style: AppTextStyles.titleLarge.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
                                   Text(
                                     profile.branch,
                                     style: AppTextStyles.bodySmall.copyWith(
-                                      color: AppColors.primaryDark,
+                                      color: AppColors.softLavender,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
                                     '${profile.college} · ${profile.year}',
-                                    style: AppTextStyles.caption,
+                                    style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
                                   ),
                                 ],
                               ),
@@ -123,7 +142,7 @@ class ProfileScreen extends StatelessWidget {
                           const SizedBox(height: 14),
                           Text(
                             profile.bio,
-                            style: AppTextStyles.bodySmall,
+                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                           ),
                         ],
 
@@ -133,8 +152,9 @@ class ProfileScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                           decoration: BoxDecoration(
-                            color: AppColors.surfaceSubtle,
-                            borderRadius: BorderRadius.circular(12),
+                            color: AppColors.surfaceSecondary,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppColors.borderSubtle),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -163,7 +183,47 @@ class ProfileScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  // Skills & Interests
+                  // Scout Guide Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceSecondary,
+                      borderRadius: AppRadii.cardRadius,
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        const RikoAvatar(
+                          expression: RikoExpression.celebrating,
+                          size: 38,
+                          showGlow: true,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Riko Scout Level: Explorer',
+                                style: AppTextStyles.titleSmall.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                '3 opportunities tracked this week',
+                                style: AppTextStyles.caption.copyWith(color: AppColors.softLavender),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Skills & Tech
                   const Text('Skills & Tech', style: AppTextStyles.headlineSmall),
                   const SizedBox(height: 10),
                   Wrap(
@@ -173,15 +233,15 @@ class ProfileScreen extends StatelessWidget {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(20),
+                          color: AppColors.surfaceSecondary,
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: AppColors.border),
                         ),
                         child: Text(
                           skill,
                           style: AppTextStyles.labelSmall.copyWith(
                             color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       );
@@ -199,13 +259,14 @@ class ProfileScreen extends StatelessWidget {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: AppColors.softTeal,
-                          borderRadius: BorderRadius.circular(20),
+                          color: AppColors.primary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.primaryBright.withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           interest,
                           style: AppTextStyles.caption.copyWith(
-                            color: AppColors.primaryDark,
+                            color: AppColors.primaryLight,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -221,8 +282,8 @@ class ProfileScreen extends StatelessWidget {
 
                   _buildNavigationTile(
                     icon: Icons.bookmark_added_outlined,
-                    iconColor: AppColors.primaryDark,
-                    iconBg: AppColors.softTeal,
+                    iconColor: AppColors.primaryBright,
+                    iconBg: AppColors.primary.withValues(alpha: 0.15),
                     title: 'Saved Opportunities',
                     subtitle: '${profile.savedOpportunityIds.length} bookmarked items',
                     onTap: () {
@@ -236,8 +297,8 @@ class ProfileScreen extends StatelessWidget {
 
                   _buildNavigationTile(
                     icon: Icons.people_outline_rounded,
-                    iconColor: AppColors.secondary,
-                    iconBg: AppColors.softBlue,
+                    iconColor: AppColors.secondaryLight,
+                    iconBg: AppColors.secondary.withValues(alpha: 0.15),
                     title: 'My Network & Connections',
                     subtitle: '${profile.connectedUserIds.length} peers connected',
                     onTap: () {
@@ -254,7 +315,7 @@ class ProfileScreen extends StatelessWidget {
                     iconColor: AppColors.warning,
                     iconBg: AppColors.warningSoft,
                     title: 'Notifications',
-                    subtitle: 'Activity updates and alerts',
+                    subtitle: 'Activity updates and deadline alerts',
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const NotificationsScreen()),
@@ -266,8 +327,8 @@ class ProfileScreen extends StatelessWidget {
 
                   _buildNavigationTile(
                     icon: Icons.settings_outlined,
-                    iconColor: AppColors.textSecondary,
-                    iconBg: AppColors.surfaceSubtle,
+                    iconColor: AppColors.textMuted,
+                    iconBg: AppColors.surfaceSecondary,
                     title: 'Settings & Appearance',
                     subtitle: 'Theme, account visibility, and preferences',
                     onTap: () {
@@ -284,8 +345,9 @@ class ProfileScreen extends StatelessWidget {
           },
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildStatItem(String value, String label) {
     return Column(
@@ -293,12 +355,12 @@ class ProfileScreen extends StatelessWidget {
         Text(
           value,
           style: AppTextStyles.titleLarge.copyWith(
-            color: AppColors.primaryDark,
-            fontWeight: FontWeight.w700,
+            color: AppColors.primaryBright,
+            fontWeight: FontWeight.w800,
           ),
         ),
         const SizedBox(height: 2),
-        Text(label, style: AppTextStyles.caption),
+        Text(label, style: AppTextStyles.caption.copyWith(color: AppColors.textMuted)),
       ],
     );
   }
@@ -319,44 +381,47 @@ class ProfileScreen extends StatelessWidget {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: iconBg,
-                borderRadius: BorderRadius.circular(10),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadii.cardRadius,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: AppRadii.cardRadius,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
               ),
-              child: Icon(icon, color: iconColor, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: AppTextStyles.titleSmall),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: AppTextStyles.caption),
-                ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: AppTextStyles.titleSmall),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: AppTextStyles.caption.copyWith(color: AppColors.textMuted)),
+                  ],
+                ),
               ),
-            ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.textTertiary,
-              size: 20,
-            ),
-          ],
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textTertiary,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );

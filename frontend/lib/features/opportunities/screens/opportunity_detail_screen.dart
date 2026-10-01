@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../data/models/opportunity.dart';
 
-/// Screen displaying complete details for an opportunity.
-class OpportunityDetailScreen extends StatelessWidget {
+/// Screen displaying Opportunity Details matching Reference Showcase Screen 5.
+class OpportunityDetailScreen extends StatefulWidget {
   final String opportunityId;
 
   const OpportunityDetailScreen({
@@ -14,7 +16,29 @@ class OpportunityDetailScreen extends StatelessWidget {
     required this.opportunityId,
   });
 
-  Future<void> _handleApply(BuildContext context, Opportunity opp) async {
+  @override
+  State<OpportunityDetailScreen> createState() => _OpportunityDetailScreenState();
+}
+
+class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  bool _isDescriptionExpanded = false;
+
+  final List<String> _tabs = const ['Details', 'Eligibility', 'Timeline', 'More'];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: _tabs.length, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleApply(Opportunity opp) async {
     final uri = Uri.tryParse(opp.registrationUrl);
     bool launched = false;
     if (uri != null) {
@@ -25,40 +49,37 @@ class OpportunityDetailScreen extends StatelessWidget {
       }
     }
 
-    if (!launched && context.mounted) {
+    if (!launched && mounted) {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: AppColors.surfaceSecondary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
             children: [
-              const Icon(Icons.check_circle_outline_rounded, color: AppColors.primary),
+              const Icon(Icons.check_circle_outline_rounded, color: AppColors.primaryBright),
               const SizedBox(width: 8),
-              const Expanded(child: Text('Application Portal', style: AppTextStyles.titleLarge)),
+              const Expanded(child: Text('Apply to Opportunity', style: AppTextStyles.titleLarge)),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'You are applying for:',
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 4),
-              Text(opp.title, style: AppTextStyles.titleSmall),
-              const SizedBox(height: 8),
-              Text('Organization: ${opp.organization}', style: AppTextStyles.bodySmall),
+              Text(opp.title, style: AppTextStyles.titleMedium),
+              const SizedBox(height: 6),
+              Text('Organization: ${opp.organization}', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted)),
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.softTeal,
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Text(
-                  'Your student profile details (Name, College, Department, Interests) will be attached.',
-                  style: AppTextStyles.caption.copyWith(color: AppColors.primaryDark),
+                  'Your student profile (Name, College, Skills) is ready to be submitted.',
+                  style: AppTextStyles.caption.copyWith(color: AppColors.softLavender),
                 ),
               ),
             ],
@@ -66,19 +87,19 @@ class OpportunityDetailScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Close'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(ctx).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Application submitted successfully to demo queue!'),
+                    content: Text('Application recorded in student scout history!'),
                     backgroundColor: AppColors.success,
                   ),
                 );
               },
-              child: const Text('Submit Application'),
+              child: const Text('Confirm Application'),
             ),
           ],
         ),
@@ -86,11 +107,12 @@ class OpportunityDetailScreen extends StatelessWidget {
     }
   }
 
-  void _showShareSheet(BuildContext context, Opportunity opp) {
+  void _showShareSheet(Opportunity opp) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: AppColors.surfaceSecondary,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -100,12 +122,16 @@ class OpportunityDetailScreen extends StatelessWidget {
           children: [
             const Text('Share Opportunity', style: AppTextStyles.headlineSmall),
             const SizedBox(height: 6),
-            Text(opp.title, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+            Text(opp.title, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted)),
             const SizedBox(height: 20),
             ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: AppColors.softTeal,
-                child: Icon(Icons.link_rounded, color: AppColors.primaryDark),
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.link_rounded, color: AppColors.primaryBright),
               ),
               title: const Text('Copy Opportunity Link', style: AppTextStyles.titleSmall),
               subtitle: Text(opp.registrationUrl, style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -120,17 +146,21 @@ class OpportunityDetailScreen extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: AppColors.softBlue,
-                child: Icon(Icons.send_rounded, color: AppColors.secondary),
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.secondary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.forum_outlined, color: AppColors.secondaryLight),
               ),
-              title: const Text('Share to Student Group', style: AppTextStyles.titleSmall),
-              subtitle: const Text('Post this to one of your joined communities', style: AppTextStyles.caption),
+              title: const Text('Share to Community Forum', style: AppTextStyles.titleSmall),
+              subtitle: const Text('Start a discussion or form a hackathon team', style: AppTextStyles.caption),
               onTap: () {
                 Navigator.of(ctx).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Shared to group discussion!'),
+                    content: Text('Shared to Community!'),
                     duration: Duration(seconds: 1),
                   ),
                 );
@@ -142,289 +172,406 @@ class OpportunityDetailScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildOrgLogo(String org) {
+    Color bg;
+    String label;
+    if (org.toLowerCase().contains('google')) {
+      bg = const Color(0xFF1E293B);
+      label = 'G';
+    } else if (org.toLowerCase().contains('flipkart')) {
+      bg = const Color(0xFF2874F0);
+      label = 'fk';
+    } else if (org.toLowerCase().contains('isro')) {
+      bg = const Color(0xFFFF6D00);
+      label = 'ISRO';
+    } else if (org.toLowerCase().contains('tcs') || org.toLowerCase().contains('tata')) {
+      bg = const Color(0xFF00838F);
+      label = 'TCS';
+    } else if (org.toLowerCase().contains('microsoft')) {
+      bg = const Color(0xFF00A4EF);
+      label = 'MS';
+    } else if (org.toLowerCase().contains('aws') || org.toLowerCase().contains('unstop')) {
+      bg = const Color(0xFF232F3E);
+      label = 'AWS';
+    } else {
+      bg = AppColors.surfaceElevated;
+      label = org.isNotEmpty ? org.substring(0, org.length > 2 ? 2 : org.length).toUpperCase() : 'OP';
+    }
+
+    return Container(
+      width: 54,
+      height: 54,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x44000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+          fontSize: 18,
+          letterSpacing: -0.5,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final opp = AppServices.opportunities.getById(opportunityId);
-
-    if (opp == null) {
-      return Scaffold(
-        appBar: AppBar(),
-        body: const Center(child: Text('Opportunity not found')),
-      );
-    }
+    final opp = AppServices.opportunities.getById(widget.opportunityId) ??
+        AppServices.opportunities.allOpportunities.firstWhere(
+          (o) => o.id == widget.opportunityId,
+          orElse: () => AppServices.opportunities.allOpportunities.first,
+        );
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Opportunity Details'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share_outlined),
-            onPressed: () => _showShareSheet(context, opp),
-            tooltip: 'Share',
-          ),
-          ValueListenableBuilder(
-            valueListenable: AppServices.auth.userNotifier,
-            builder: (context, user, _) {
-              final isSaved = user?.savedOpportunityIds.contains(opp.id) ?? false;
-              return IconButton(
-                icon: Icon(
-                  isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                  color: isSaved ? AppColors.primary : AppColors.textPrimary,
-                ),
-                onPressed: () async {
-                  final saved = await AppServices.auth.toggleSaveOpportunity(opp.id);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).clearSnackBars();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(saved ? 'Saved to bookmarks' : 'Removed from bookmarks'),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-                  }
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // App Bar with Banner
+          SliverAppBar(
+            expandedHeight: 190.0,
+            pinned: true,
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+              onPressed: () => Navigator.pop(context),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.share_outlined, color: AppColors.textPrimary),
+                onPressed: () => _showShareSheet(opp),
+              ),
+              ValueListenableBuilder(
+                valueListenable: AppServices.auth.userNotifier,
+                builder: (context, user, _) {
+                  final isSaved = user?.savedOpportunityIds.contains(opp.id) ?? false;
+                  return IconButton(
+                    icon: Icon(
+                      isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                      color: isSaved ? AppColors.primaryBright : AppColors.textPrimary,
+                    ),
+                    onPressed: () => AppServices.auth.toggleSaveOpportunity(opp.id),
+                  );
                 },
-                tooltip: isSaved ? 'Remove from Saved' : 'Save',
-              );
-            },
+              ),
+              const SizedBox(width: 8),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF23164D), Color(0xFF101333)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Ambient Glow Circle
+                    Positioned(
+                      top: -40,
+                      right: 20,
+                      child: Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primaryDark.withValues(alpha: 0.25),
+                        ),
+                      ),
+                    ),
+                    // Banner Content Overlay
+                    Positioned(
+                      bottom: 24,
+                      left: 20,
+                      child: _buildOrgLogo(opp.organization),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          const SizedBox(width: 8),
+
+          // Main Details Body
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title
+                  Text(
+                    opp.title,
+                    style: AppTextStyles.displaySmall.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // Organization
+                  Text(
+                    opp.organization,
+                    style: AppTextStyles.titleMedium.copyWith(
+                      color: AppColors.softLavender,
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Tags Row
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildDetailBadge(opp.mode),
+                      _buildDetailBadge(
+                        opp.category == 'Hackathons'
+                            ? 'Team Event'
+                            : (opp.category == 'Internships' ? 'Internship' : opp.category),
+                      ),
+                      _buildDetailBadge(
+                        opp.salary ?? opp.prize,
+                        isHighlight: true,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Action Buttons Row: Save, Share, Visit Website
+                  Row(
+                    children: [
+                      ValueListenableBuilder(
+                        valueListenable: AppServices.auth.userNotifier,
+                        builder: (context, user, _) {
+                          final isSaved = user?.savedOpportunityIds.contains(opp.id) ?? false;
+                          return _buildActionIconButton(
+                            icon: isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                            label: isSaved ? 'Saved' : 'Save',
+                            color: isSaved ? const Color(0xFFEF4444) : AppColors.textMuted,
+                            onTap: () => AppServices.auth.toggleSaveOpportunity(opp.id),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                      _buildActionIconButton(
+                        icon: Icons.share_outlined,
+                        label: 'Share',
+                        color: AppColors.softLavender,
+                        onTap: () => _showShareSheet(opp),
+                      ),
+                      const SizedBox(width: 12),
+                      _buildActionIconButton(
+                        icon: Icons.language_rounded,
+                        label: 'Visit Website',
+                        color: AppColors.cyanHighlight,
+                        onTap: () async {
+                          final uri = Uri.tryParse(opp.registrationUrl);
+                          if (uri != null) {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Segmented Tabs: Details, Eligibility, Timeline, More
+                  TabBar(
+                    controller: _tabController,
+                    isScrollable: false,
+                    indicatorColor: AppColors.primaryBright,
+                    indicatorWeight: 3,
+                    labelColor: AppColors.textPrimary,
+                    unselectedLabelColor: AppColors.textMuted,
+                    labelStyle: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700),
+                    unselectedLabelStyle: AppTextStyles.labelMedium,
+                    tabs: _tabs.map((t) => Tab(text: t)).toList(),
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  // Tab Content Section
+                  AnimatedBuilder(
+                    animation: _tabController,
+                    builder: (context, _) {
+                      switch (_tabController.index) {
+                        case 0:
+                          return _buildDetailsTab(opp);
+                        case 1:
+                          return _buildEligibilityTab(opp);
+                        case 2:
+                          return _buildTimelineTab(opp);
+                        case 3:
+                        default:
+                          return _buildMoreTab(opp);
+                      }
+                    },
+                  ),
+
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
+
+      // Fixed Sticky Apply Button
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         decoration: const BoxDecoration(
           color: AppColors.surface,
           border: Border(top: BorderSide(color: AppColors.border, width: 1)),
         ),
         child: SafeArea(
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Deadline', style: AppTextStyles.caption),
-                    Text(
-                      opp.deadline,
-                      style: AppTextStyles.titleSmall.copyWith(
-                        color: opp.isClosingSoon ? AppColors.error : AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              ElevatedButton.icon(
-                onPressed: () => _handleApply(context, opp),
-                icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                label: const Text('Apply Now', style: AppTextStyles.labelLarge),
-              ),
-            ],
-          ),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Card with Category, Title & Org
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.softTeal,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            opp.category.toUpperCase(),
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.primaryDark,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.softBlue,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            opp.domain,
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.secondary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(opp.title, style: AppTextStyles.headlineSmall),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Icon(Icons.business_rounded, size: 16, color: AppColors.textSecondary),
-                        const SizedBox(width: 6),
-                        Text(opp.organization, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Key Highlights Grid
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildInfoBlock(
-                      icon: Icons.location_on_outlined,
-                      label: 'Location & Mode',
-                      value: '${opp.location} (${opp.mode})',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildInfoBlock(
-                      icon: Icons.military_tech_outlined,
-                      label: 'Prize / Stipend',
-                      value: opp.salary ?? opp.prize,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // Description Section
-              const Text('About Opportunity', style: AppTextStyles.headlineSmall),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Text(
-                  opp.description,
-                  style: AppTextStyles.bodyMedium.copyWith(height: 1.6),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Required Skills Section
-              const Text('Required Skills & Tech', style: AppTextStyles.headlineSmall),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: opp.skills.map((skill) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Text(
-                      skill,
-                      style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary),
-                    ),
-                  );
-                }).toList(),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Eligibility Section
-              const Text('Eligibility Criteria', style: AppTextStyles.headlineSmall),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.verified_outlined, color: AppColors.primary, size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        opp.eligibility,
-                        style: AppTextStyles.bodySmall,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Source & Verification
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceSubtle,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.textSecondary),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Verified from ${opp.source}. Applications submitted through direct partner portal.',
-                        style: AppTextStyles.caption,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-            ],
+          top: false,
+          child: AppButton(
+            text: 'Apply Now ↗',
+            onPressed: () => _handleApply(opp),
+            variant: AppButtonVariant.primary,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildInfoBlock({
+  Widget _buildDetailBadge(String label, {bool isHighlight = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isHighlight
+            ? AppColors.primary.withValues(alpha: 0.2)
+            : AppColors.surfaceSecondary,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isHighlight ? AppColors.primaryBright.withValues(alpha: 0.4) : AppColors.border,
+        ),
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.labelSmall.copyWith(
+          color: isHighlight ? AppColors.primaryLight : AppColors.textPrimary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionIconButton({
     required IconData icon,
     required String label,
-    required String value,
+    required Color color,
+    required VoidCallback onTap,
   }) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceSecondary,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 16, color: color),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailsTab(Opportunity opp) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('About', style: AppTextStyles.headlineSmall),
+        const SizedBox(height: 8),
+        Text(
+          opp.description,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+            height: 1.6,
+          ),
+          maxLines: _isDescriptionExpanded ? 20 : 3,
+          overflow: TextOverflow.ellipsis,
+        ),
+        if (opp.description.length > 120) ...[
+          const SizedBox(height: 6),
+          GestureDetector(
+            onTap: () => setState(() => _isDescriptionExpanded = !_isDescriptionExpanded),
+            child: Text(
+              _isDescriptionExpanded ? 'Show less' : 'Show more',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.softLavender,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 20),
+        const Text('Skills & Technologies', style: AppTextStyles.headlineSmall),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: opp.skills.map((skill) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceSecondary,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Text(skill, style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEligibilityTab(Opportunity opp) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
+        color: AppColors.surfaceSecondary,
+        borderRadius: AppRadii.cardRadius,
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
@@ -432,25 +579,67 @@ class OpportunityDetailScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: AppColors.primaryDark),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  label,
-                  style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w500),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+              const Icon(Icons.verified_outlined, color: AppColors.primaryBright, size: 20),
+              const SizedBox(width: 8),
+              Text('Who Can Apply', style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700)),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: AppTextStyles.titleSmall,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          const SizedBox(height: 12),
+          Text(opp.eligibility, style: AppTextStyles.bodyMedium.copyWith(height: 1.5)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimelineTab(Opportunity opp) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceSecondary,
+        borderRadius: AppRadii.cardRadius,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.schedule_rounded, color: AppColors.warning, size: 20),
+              const SizedBox(width: 8),
+              Text('Application Deadline', style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700)),
+            ],
           ),
+          const SizedBox(height: 12),
+          Text(
+            'Closing Date: ${opp.deadline}',
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${opp.daysLeft} days remaining to submit your application.',
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMoreTab(Opportunity opp) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceSecondary,
+        borderRadius: AppRadii.cardRadius,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Verified Source', style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 6),
+          Text('Verified from ${opp.source}. Applications submitted through direct partner portal.', style: AppTextStyles.bodySmall),
         ],
       ),
     );
