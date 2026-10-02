@@ -401,4 +401,12 @@ class ConnectRepository extends ChangeNotifier {
       }
     }
   }
+
+  /// Resets connection state on logout.
+  void reset() {
+    _peopleNotifier.value = _initialPeople;
+    _groupsNotifier.value = _initialGroups;
+    _mentorsNotifier.value = _initialMentors;
+    notifyListeners();
+  }
 }

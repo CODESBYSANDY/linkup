@@ -4,12 +4,31 @@ import os
 import uuid
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+import json
+import sqlite3
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.pool import StaticPool
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.types import ARRAY
+from sqlalchemy.dialects.postgresql import JSONB
 
 # Set TESTING environment variable before importing application
 os.environ["TESTING"] = "True"
 os.environ["ENVIRONMENT"] = "testing"
+
+# SQLite list/dict adapters for portable test execution
+sqlite3.register_adapter(list, lambda l: json.dumps(l))
+sqlite3.register_adapter(dict, lambda d: json.dumps(d))
+sqlite3.register_converter("json", lambda b: json.loads(b.decode()))
+
+@compiles(ARRAY, "sqlite")
+def compile_array_sqlite(type_, compiler, **kw):
+    return "JSON"
+
+@compiles(JSONB, "sqlite")
+def compile_jsonb_sqlite(type_, compiler, **kw):
+    return "JSON"
 
 from app.core.config import settings
 from app.core.database import Base, get_db
@@ -18,9 +37,20 @@ from app.main import app
 from app.models.user import User, UserRole
 from app.models.profile import UserProfile
 
-# Test database engine
+# Determine test engine: use PostgreSQL if reachable; otherwise hermetic in-memory SQLite
 TEST_DB_URL = settings.TEST_DATABASE_URL or "postgresql+psycopg://postgres:postgres@localhost:5432/linkup_test"
-test_engine = create_engine(TEST_DB_URL, pool_pre_ping=True)
+try:
+    _pg_engine = create_engine(TEST_DB_URL, pool_pre_ping=True)
+    with _pg_engine.connect() as _conn:
+        _conn.execute(text("SELECT 1"))
+    test_engine = _pg_engine
+except Exception:
+    test_engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False, "detect_types": sqlite3.PARSE_DECLTYPES},
+        poolclass=StaticPool,
+    )
+
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine, expire_on_commit=False)
 
 

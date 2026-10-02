@@ -44,8 +44,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     initialize_firebase()
 
     # Seed static reference categories
-    with SessionLocal() as db:
-        seed_static_reference_data(db)
+    if not settings.TESTING:
+        try:
+            with SessionLocal() as db:
+                seed_static_reference_data(db)
+        except Exception as exc:
+            logger.warning("Database seeding during startup skipped / deferred: %s", exc)
 
     logger.info("OpenAPI Docs available at /docs and /redoc")
     logger.info("CORS allowed origins: %s", settings.CORS_ORIGINS)
@@ -72,6 +76,7 @@ def create_application() -> FastAPI:
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
+        allow_origin_regex=r"^http://(localhost|127\.0\.0\.1)(:[0-9]+)?$",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

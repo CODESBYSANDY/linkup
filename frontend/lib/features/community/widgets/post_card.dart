@@ -36,6 +36,7 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentUserId = AppServices.auth.currentUser?.id ?? 'demo_user_1';
     final isLiked = post.isLikedBy(currentUserId);
 
@@ -58,9 +59,9 @@ class PostCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: isDark ? AppColors.darkSurface : AppColors.surface,
                 borderRadius: AppRadii.cardRadius,
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,12 +122,14 @@ class PostCard extends StatelessWidget {
                                 post.authorName,
                                 style: AppTextStyles.titleSmall.copyWith(
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
+                                  color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                                 ),
                               ),
                               Text(
                                 '${post.authorRole} · ${post.timeAgo}',
-                                style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+                                style: AppTextStyles.caption.copyWith(
+                                  color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
+                                ),
                               ),
                             ],
                           ),
@@ -151,9 +154,13 @@ class PostCard extends StatelessWidget {
                         ),
                       ),
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert_rounded, size: 18, color: AppColors.textMuted),
+                        icon: Icon(
+                          Icons.more_vert_rounded,
+                          size: 18,
+                          color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
+                        ),
                         padding: EdgeInsets.zero,
-                        color: AppColors.surfaceElevated,
+                        color: isDark ? AppColors.darkSurfaceElevated : AppColors.surfaceElevated,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         onSelected: (value) async {
                           if (value == 'report') {
@@ -167,13 +174,29 @@ class PostCard extends StatelessWidget {
                             final confirmed = await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
-                                backgroundColor: AppColors.surface,
-                                title: const Text('Delete Post?'),
-                                content: const Text('Are you sure you want to delete this post? This action cannot be undone.'),
+                                backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
+                                title: Text(
+                                  'Delete Post?',
+                                  style: TextStyle(
+                                    color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                content: Text(
+                                  'Are you sure you want to delete this post? This action cannot be undone.',
+                                  style: TextStyle(
+                                    color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                                  ),
+                                ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(ctx, false),
-                                    child: const Text('Cancel'),
+                                    child: Text(
+                                      'Cancel',
+                                      style: TextStyle(
+                                        color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
+                                      ),
+                                    ),
                                   ),
                                   TextButton(
                                     onPressed: () => Navigator.pop(ctx, true),
@@ -189,13 +212,22 @@ class PostCard extends StatelessWidget {
                           }
                         },
                         itemBuilder: (context) => [
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'report',
                             child: Row(
                               children: [
-                                Icon(Icons.flag_outlined, size: 16, color: AppColors.textSecondary),
-                                SizedBox(width: 8),
-                                Text('Report Post', style: AppTextStyles.bodySmall),
+                                Icon(
+                                  Icons.flag_outlined,
+                                  size: 16,
+                                  color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Report Post',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -222,7 +254,7 @@ class PostCard extends StatelessWidget {
                     post.title,
                     style: AppTextStyles.titleMedium.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                     ),
                   ),
 
@@ -232,7 +264,7 @@ class PostCard extends StatelessWidget {
                   Text(
                     post.content,
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
                       height: 1.5,
                     ),
                     maxLines: 3,
@@ -249,20 +281,22 @@ class PostCard extends StatelessWidget {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceSecondary,
+                          color: isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary,
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: AppColors.borderSubtle),
+                          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.borderSubtle),
                         ),
                         child: Text(
                           '#$t',
-                          style: AppTextStyles.caption.copyWith(color: AppColors.softLavender),
+                          style: AppTextStyles.caption.copyWith(
+                            color: isDark ? const Color(0xFFC084FC) : AppColors.softLavender,
+                          ),
                         ),
                       );
                     }).toList(),
                   ),
 
                   const SizedBox(height: 14),
-                  const Divider(color: AppColors.borderSubtle),
+                  Divider(color: isDark ? AppColors.darkBorder : AppColors.borderSubtle),
                   const SizedBox(height: 8),
 
                   // Interaction Row (Upvote, Comment, Bookmark, Share)
@@ -284,10 +318,10 @@ class PostCard extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: isLiked
                                       ? AppColors.primary.withValues(alpha: 0.2)
-                                      : AppColors.surfaceSecondary,
+                                      : (isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: isLiked ? AppColors.primaryBright : AppColors.borderSubtle,
+                                    color: isLiked ? AppColors.primaryBright : (isDark ? AppColors.darkBorder : AppColors.borderSubtle),
                                   ),
                                 ),
                                 child: Row(
@@ -295,13 +329,13 @@ class PostCard extends StatelessWidget {
                                     Icon(
                                       isLiked ? Icons.arrow_upward_rounded : Icons.arrow_upward_outlined,
                                       size: 16,
-                                      color: isLiked ? AppColors.primaryBright : AppColors.textMuted,
+                                      color: isLiked ? AppColors.primaryBright : (isDark ? AppColors.darkTextMuted : AppColors.textMuted),
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       '${post.upvotes}',
                                       style: AppTextStyles.labelSmall.copyWith(
-                                        color: isLiked ? AppColors.primaryBright : AppColors.textMuted,
+                                        color: isLiked ? AppColors.primaryBright : (isDark ? AppColors.darkTextMuted : AppColors.textMuted),
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
@@ -326,22 +360,22 @@ class PostCard extends StatelessWidget {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                               decoration: BoxDecoration(
-                                color: AppColors.surfaceSecondary,
+                                color: isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary,
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: AppColors.borderSubtle),
+                                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.borderSubtle),
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.chat_bubble_outline_rounded,
                                     size: 15,
-                                    color: AppColors.textMuted,
+                                    color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${post.commentsCount}',
                                     style: AppTextStyles.labelSmall.copyWith(
-                                      color: AppColors.textMuted,
+                                      color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -359,7 +393,7 @@ class PostCard extends StatelessWidget {
                             icon: Icon(
                               isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
                               size: 20,
-                              color: isSaved ? AppColors.primaryBright : AppColors.textMuted,
+                              color: isSaved ? AppColors.primaryBright : (isDark ? AppColors.darkTextMuted : AppColors.textMuted),
                             ),
                             onPressed: () async {
                               final saved = await AppServices.auth.toggleSavePost(post.id);
@@ -369,7 +403,6 @@ class PostCard extends StatelessWidget {
                                   SnackBar(
                                     content: Text(saved ? 'Post saved to your library' : 'Post removed from saved'),
                                     duration: const Duration(milliseconds: 900),
-                                    backgroundColor: AppColors.surfaceElevated,
                                   ),
                                 );
                               }
@@ -381,10 +414,10 @@ class PostCard extends StatelessWidget {
 
                           // Share button
                           IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.share_outlined,
                               size: 19,
-                              color: AppColors.textMuted,
+                              color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
                             ),
                             onPressed: () {
                               ScaffoldMessenger.of(context).clearSnackBars();
@@ -392,7 +425,6 @@ class PostCard extends StatelessWidget {
                                 const SnackBar(
                                   content: Text('Post link copied to clipboard!'),
                                   duration: Duration(milliseconds: 900),
-                                  backgroundColor: AppColors.surfaceElevated,
                                 ),
                               );
                             },

@@ -36,6 +36,8 @@ class GroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return ValueListenableBuilder(
       valueListenable: AppServices.auth.userNotifier,
       builder: (context, user, _) {
@@ -55,9 +57,9 @@ class GroupCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: isDark ? AppColors.darkSurface : AppColors.surface,
                 borderRadius: AppRadii.cardRadius,
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +91,10 @@ class GroupCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 group.name,
-                                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                                style: AppTextStyles.titleMedium.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -104,14 +109,17 @@ class GroupCard extends StatelessWidget {
                                     SnackBar(
                                       content: Text(joined ? 'Joined ${group.name}' : 'Left ${group.name}'),
                                       duration: const Duration(seconds: 1),
-                                      backgroundColor: AppColors.surfaceElevated,
                                     ),
                                   );
                                 }
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: isJoined ? AppColors.surfaceSecondary : AppColors.primary,
-                                foregroundColor: isJoined ? AppColors.softLavender : Colors.white,
+                                backgroundColor: isJoined
+                                    ? (isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary)
+                                    : AppColors.primary,
+                                foregroundColor: isJoined
+                                    ? (isDark ? AppColors.primaryLight : AppColors.softLavender)
+                                    : Colors.white,
                                 side: BorderSide(
                                   color: isJoined ? AppColors.primaryBright.withValues(alpha: 0.4) : Colors.transparent,
                                 ),
@@ -133,14 +141,16 @@ class GroupCard extends StatelessWidget {
                         Text(
                           '${group.membersCount} members · ${group.category}',
                           style: AppTextStyles.caption.copyWith(
-                            color: AppColors.softLavender,
+                            color: isDark ? AppColors.primaryLight : AppColors.softLavender,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           group.description,
-                          style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),

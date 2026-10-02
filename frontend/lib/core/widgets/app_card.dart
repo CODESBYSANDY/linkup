@@ -26,8 +26,16 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = backgroundColor ?? (isElevated ? AppColors.surfaceSecondary : AppColors.surface);
-    final border = borderColor ?? (hasGlow ? AppColors.borderGlow : AppColors.border);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final defaultBg = isDark
+        ? (isElevated ? AppColors.darkSurfaceElevated : AppColors.darkSurface)
+        : (isElevated ? AppColors.surfaceSecondary : AppColors.surface);
+    final defaultBorder = isDark
+        ? (hasGlow ? AppColors.borderGlow : AppColors.darkBorder)
+        : (hasGlow ? AppColors.borderGlow : AppColors.border);
+
+    final bg = backgroundColor ?? defaultBg;
+    final border = borderColor ?? defaultBorder;
 
     Widget content = Container(
       padding: padding,

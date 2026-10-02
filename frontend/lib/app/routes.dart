@@ -14,6 +14,8 @@ import '../features/assistant/screens/riko_assistant_screen.dart';
 import '../features/community/screens/community_screen.dart';
 import '../features/community/screens/create_post_screen.dart';
 import '../features/connect/screens/connect_screen.dart';
+import '../features/auth/screens/phone_login_screen.dart';
+import '../features/auth/screens/otp_verification_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
 import '../features/profile/screens/edit_profile_screen.dart';
 import '../features/profile/screens/connections_list_screen.dart';
@@ -25,6 +27,8 @@ abstract class AppRoutes {
   static const String splash = '/';
   static const String login = '/login';
   static const String register = '/register';
+  static const String phoneLogin = '/phone-login';
+  static const String otpVerification = '/otp-verification';
   static const String onboarding = '/onboarding';
   static const String profileSetup = '/profile-setup';
   static const String interestSelection = '/interest-selection';
@@ -47,6 +51,15 @@ abstract class AppRoutes {
     splash: (context) => const SplashScreen(),
     login: (context) => const LoginScreen(),
     register: (context) => const RegisterScreen(),
+    phoneLogin: (context) => const PhoneLoginScreen(),
+    otpVerification: (context) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
+      return OtpVerificationScreen(
+        phoneNumber: args['phoneNumber'] ?? '',
+        verificationId: args['verificationId'] ?? '',
+        resendToken: args['resendToken'],
+      );
+    },
     onboarding: (context) => const GetStartedScreen(),
     profileSetup: (context) => const ProfileSetupScreen(),
     interestSelection: (context) => const InterestSelectionScreen(),

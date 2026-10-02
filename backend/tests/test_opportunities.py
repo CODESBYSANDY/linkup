@@ -69,7 +69,12 @@ def test_create_and_get_opportunity(
     assert saved_list_res.status_code == 200
     assert any(item["id"] == opp_id for item in saved_list_res.json()["items"])
 
-    # 5. Unsave opportunity
+    # 5. Unsave opportunity (Idempotency verification: calling DELETE multiple times never re-saves)
     unsave_res = client.delete(f"/api/v1/opportunities/{opp_id}/save", headers=user_headers)
     assert unsave_res.status_code == 200
     assert unsave_res.json()["is_saved"] is False
+
+    # Second DELETE call must remain False (strict idempotency)
+    unsave_repeat_res = client.delete(f"/api/v1/opportunities/{opp_id}/save", headers=user_headers)
+    assert unsave_repeat_res.status_code == 200
+    assert unsave_repeat_res.json()["is_saved"] is False

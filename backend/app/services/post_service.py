@@ -156,10 +156,14 @@ def list_posts(
 
     if tag_filter and tag_filter.lower() != "all":
         tag_term = tag_filter.strip().lower()
-        stmt = stmt.where(
-            Post.tags.any(tag_term)
-            | func.lower(func.array_to_string(Post.tags, ",")).like(f"%{tag_term}%")
-        )
+        if db.bind and db.bind.dialect.name == "sqlite":
+            from sqlalchemy import String
+            stmt = stmt.where(Post.tags.cast(String).contains(tag_term))
+        else:
+            stmt = stmt.where(
+                Post.tags.any(tag_term)
+                | func.lower(func.array_to_string(Post.tags, ",")).like(f"%{tag_term}%")
+            )
 
     if search:
         q = f"%{search.strip().lower()}%"
@@ -287,6 +291,32 @@ def delete_post(
     db.commit()
 
 
+def unlike_post(
+    user: User, post_id: uuid.UUID, db: Session
+) -> Dict[str, Any]:
+    """Idempotently unlike a post for the authenticated user."""
+    post = db.get(Post, post_id)
+    if not post or post.is_deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Post not found.",
+        )
+
+    stmt = select(PostLike).where(
+        PostLike.post_id == post_id,
+        PostLike.user_id == user.id,
+    )
+    like = db.execute(stmt).scalar_one_or_none()
+    if like:
+        db.delete(like)
+        db.commit()
+
+    count = db.scalar(
+        select(func.count(PostLike.id)).where(PostLike.post_id == post_id)
+    ) or 0
+    return {"likes_count": count, "is_liked": False}
+
+
 def toggle_like_post(
     user: User, post_id: uuid.UUID, db: Session
 ) -> Dict[str, Any]:
@@ -318,6 +348,28 @@ def toggle_like_post(
         select(func.count(PostLike.id)).where(PostLike.post_id == post_id)
     ) or 0
     return {"likes_count": count, "is_liked": is_liked}
+
+
+def unsave_post(
+    user: User, post_id: uuid.UUID, db: Session
+) -> bool:
+    """Idempotently remove a post bookmark for the authenticated user."""
+    post = db.get(Post, post_id)
+    if not post or post.is_deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Post not found.",
+        )
+
+    stmt = select(SavedPost).where(
+        SavedPost.post_id == post_id,
+        SavedPost.user_id == user.id,
+    )
+    saved = db.execute(stmt).scalar_one_or_none()
+    if saved:
+        db.delete(saved)
+        db.commit()
+    return False  # Unsaved
 
 
 def toggle_save_post(

@@ -49,7 +49,14 @@ class RikoAvatar extends StatelessWidget {
           height: size,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            return _buildVectorFallback(size);
+            return Image.asset(
+              'assets/riko/riko.png',
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              alignment: const Alignment(0, -0.6),
+              errorBuilder: (ctx, err, st) => _buildVectorFallback(size),
+            );
           },
         ),
       ),

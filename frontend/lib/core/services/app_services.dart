@@ -1,7 +1,10 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
 import 'storage_service.dart';
-import '../../data/repositories/local_auth_service.dart';
+import '../../firebase_options.dart';
+import '../../features/auth/services/firebase_auth_service.dart';
 import '../../data/repositories/opportunity_repository.dart';
 import '../../data/repositories/community_repository.dart';
 import '../../data/repositories/connect_repository.dart';
@@ -24,7 +27,30 @@ class AppServices {
   static Future<void> init() async {
     if (!_initialized) {
       await storage.init();
-      auth = LocalAuthService(storage);
+
+      // Safe, single authoritative Firebase initialization
+      try {
+        if (Firebase.apps.isEmpty) {
+          FirebaseOptions? options;
+          try {
+            options = DefaultFirebaseOptions.currentPlatform;
+          } catch (_) {
+            if (kIsWeb) {
+              options = DefaultFirebaseOptions.web;
+            }
+          }
+
+          if (options != null) {
+            await Firebase.initializeApp(options: options);
+          } else {
+            await Firebase.initializeApp();
+          }
+        }
+      } catch (e) {
+        debugPrint('[AppServices] Firebase initialization notice: $e');
+      }
+
+      auth = FirebaseAuthService(storage);
       opportunities = OpportunityRepository();
       community = CommunityRepository();
       connect = ConnectRepository();
@@ -60,5 +86,13 @@ class AppServices {
         break;
     }
     await storage.setString(_themeModeKey, modeString);
+  }
+
+  /// Resets all cached repository data on logout to guarantee clean user isolation.
+  static void resetUserData() {
+    opportunities.reset();
+    community.reset();
+    connect.reset();
+    notifications.reset();
   }
 }

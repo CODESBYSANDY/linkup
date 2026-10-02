@@ -162,6 +162,39 @@ class LocalAuthService implements AuthService {
   }
 
   @override
+  Future<bool> signInWithGoogle() async {
+    return loginAsGuest();
+  }
+
+  @override
+  Future<void> verifyPhoneNumber({
+    required String phoneNumber,
+    required void Function(String verificationId, int? resendToken) onCodeSent,
+    required void Function(String errorMessage) onError,
+    void Function(String verificationId)? onAutoVerified,
+  }) async {
+    onCodeSent('mock_verification_id', 12345);
+  }
+
+  @override
+  Future<bool> verifyOtp({
+    required String verificationId,
+    required String smsCode,
+  }) async {
+    return loginAsGuest();
+  }
+
+  @override
+  Future<void> resendOtp({
+    required String phoneNumber,
+    required int? resendToken,
+    required void Function(String verificationId, int? resendToken) onCodeSent,
+    required void Function(String errorMessage) onError,
+  }) async {
+    onCodeSent('mock_verification_id_resend', 12345);
+  }
+
+  @override
   Future<void> updateProfile(UserProfile updatedProfile) async {
     _userNotifier.value = updatedProfile;
     await _storage.setJson(_userKey, updatedProfile.toJson());

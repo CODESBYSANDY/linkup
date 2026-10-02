@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "925004572928",
+    "project_id": "link-up-e0998",
+    "storage_bucket": "link-up-e0998.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:925004572928:android:fd1c356cda22ba9ebf2be5",
+        "android_client_info": {
+          "package_name": "com.example.linkup"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "925004572928-dat8ndcaqkmgej6kjisacgbbm7hu0t33.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAeN2Z-LSQi_KjTRnhQNLnOrj_RW3SsDEc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "925004572928-dat8ndcaqkmgej6kjisacgbbm7hu0t33.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

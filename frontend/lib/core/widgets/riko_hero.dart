@@ -82,7 +82,13 @@ class RikoHero extends StatelessWidget {
                   height: size,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
-                    return _buildHeroFallback();
+                    return Image.asset(
+                      'assets/riko/riko.png',
+                      width: size,
+                      height: size,
+                      fit: BoxFit.contain,
+                      errorBuilder: (ctx, err, st) => _buildHeroFallback(),
+                    );
                   },
                 ),
               ),

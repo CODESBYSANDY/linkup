@@ -318,4 +318,9 @@ class OpportunityRepository {
       }
     }
   }
+
+  /// Resets user-specific saved state on logout.
+  void reset() {
+    _savedOpportunitiesNotifier.value = [];
+  }
 }

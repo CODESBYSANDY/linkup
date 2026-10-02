@@ -27,12 +27,14 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 2));
 
     // Verify Login Screen
-    expect(find.text('Welcome back'), findsOneWidget);
-    expect(find.text('Sign In'), findsOneWidget);
+    expect(find.text('Welcome to'), findsOneWidget);
+    expect(find.textContaining('LINKUP'), findsWidgets);
     expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.text('Continue with Phone'), findsOneWidget);
 
-    // Tap Sign In
-    await tester.tap(find.text('Sign In'));
+    // Tap Explore as Demo Student
+    await tester.ensureVisible(find.text('Explore as Demo Student'));
+    await tester.tap(find.text('Explore as Demo Student'));
     await tester.pumpAndSettle();
 
     // Verify Home Screen elements

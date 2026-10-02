@@ -82,7 +82,15 @@ class NotificationRepository {
   int get unreadCount => _notificationsNotifier.value.where((n) => !n.isRead).length;
 
   NotificationRepository() {
-    fetchNotifications();
+    if (ApiClient.instance.isAuthenticated) {
+      fetchNotifications();
+    }
+  }
+
+  /// Resets notifications state on user logout to prevent cross-session leakage.
+  void reset() {
+    _notificationsNotifier.value = _initialNotifications;
+    _isLoading = false;
   }
 
   /// Fetches real notifications from GET /api/v1/notifications.

@@ -120,11 +120,14 @@ def list_opportunities(
     # Skills filter
     if skills and skills.lower() != "all":
         skill_term = skills.strip().lower()
-        # PostgreSQL ANY array check
-        stmt = stmt.where(
-            Opportunity.skills.any(skill_term)
-            | func.lower(func.array_to_string(Opportunity.skills, ",")).like(f"%{skill_term}%")
-        )
+        if db.bind and db.bind.dialect.name == "sqlite":
+            from sqlalchemy import String
+            stmt = stmt.where(Opportunity.skills.cast(String).contains(skill_term))
+        else:
+            stmt = stmt.where(
+                Opportunity.skills.any(skill_term)
+                | func.lower(func.array_to_string(Opportunity.skills, ",")).like(f"%{skill_term}%")
+            )
 
     # Featured filter
     if featured is not None:
@@ -282,6 +285,51 @@ def delete_opportunity(opportunity_id: uuid.UUID, db: Session) -> None:
     opp.is_active = False
     opp.status = OpportunityStatus.REJECTED
     db.commit()
+
+
+def save_opportunity(
+    user: User, opportunity_id: uuid.UUID, db: Session
+) -> bool:
+    """Idempotently bookmark an opportunity for the current user."""
+    opp = db.get(Opportunity, opportunity_id)
+    if not opp or not opp.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Opportunity not found.",
+        )
+
+    stmt = select(SavedOpportunity).where(
+        SavedOpportunity.user_id == user.id,
+        SavedOpportunity.opportunity_id == opportunity_id,
+    )
+    saved = db.execute(stmt).scalar_one_or_none()
+    if not saved:
+        new_save = SavedOpportunity(user_id=user.id, opportunity_id=opportunity_id)
+        db.add(new_save)
+        db.commit()
+    return True
+
+
+def unsave_opportunity(
+    user: User, opportunity_id: uuid.UUID, db: Session
+) -> bool:
+    """Idempotently remove an opportunity bookmark for the current user."""
+    opp = db.get(Opportunity, opportunity_id)
+    if not opp or not opp.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Opportunity not found.",
+        )
+
+    stmt = select(SavedOpportunity).where(
+        SavedOpportunity.user_id == user.id,
+        SavedOpportunity.opportunity_id == opportunity_id,
+    )
+    saved = db.execute(stmt).scalar_one_or_none()
+    if saved:
+        db.delete(saved)
+        db.commit()
+    return False  # Now unsaved
 
 
 def toggle_save_opportunity(

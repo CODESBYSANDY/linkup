@@ -195,8 +195,8 @@ def unsave_opportunity(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Unsave opportunity."""
-    is_saved = opportunity_service.toggle_save_opportunity(current_user, opportunity_id, db)
+    """Idempotently unsave/unbookmark opportunity."""
+    is_saved = opportunity_service.unsave_opportunity(current_user, opportunity_id, db)
     return {"opportunity_id": str(opportunity_id), "is_saved": is_saved}
 
 

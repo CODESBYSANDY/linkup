@@ -17,6 +17,8 @@ class MentorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return ValueListenableBuilder(
       valueListenable: AppServices.auth.userNotifier,
       builder: (context, user, _) {
@@ -37,9 +39,9 @@ class MentorCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: isDark ? AppColors.darkSurface : AppColors.surface,
                 borderRadius: AppRadii.cardRadius,
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,7 +74,10 @@ class MentorCard extends StatelessWidget {
                                 Flexible(
                                   child: Text(
                                     mentor.name,
-                                    style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                                    style: AppTextStyles.titleMedium.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -99,12 +104,16 @@ class MentorCard extends StatelessWidget {
                             const SizedBox(height: 2),
                             Text(
                               mentor.role,
-                              style: AppTextStyles.bodySmall.copyWith(color: AppColors.softLavender),
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: isDark ? AppColors.primaryLight : AppColors.softLavender,
+                              ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               mentor.college,
-                              style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+                              style: AppTextStyles.caption.copyWith(
+                                color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
+                              ),
                             ),
                           ],
                         ),
@@ -122,14 +131,14 @@ class MentorCard extends StatelessWidget {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceSecondary,
+                          color: isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary,
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: AppColors.borderSubtle),
+                          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.borderSubtle),
                         ),
                         child: Text(
                           t,
                           style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textSecondary,
+                            color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -155,12 +164,16 @@ class MentorCard extends StatelessWidget {
                           label: Text(
                             isRequested ? 'Requested' : 'Learn',
                             style: AppTextStyles.labelMedium.copyWith(
-                              color: isRequested ? AppColors.softLavender : AppColors.textPrimary,
+                              color: isRequested
+                                  ? AppColors.softLavender
+                                  : (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary),
                             ),
                           ),
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.border),
-                            backgroundColor: isRequested ? AppColors.surfaceSecondary : Colors.transparent,
+                            side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.border),
+                            backgroundColor: isRequested
+                                ? (isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary)
+                                : Colors.transparent,
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
@@ -177,7 +190,6 @@ class MentorCard extends StatelessWidget {
                                 SnackBar(
                                   content: Text(res == 'Pending' ? 'Connection request sent' : 'Connected!'),
                                   duration: const Duration(seconds: 1),
-                                  backgroundColor: AppColors.surfaceElevated,
                                 ),
                               );
                             }

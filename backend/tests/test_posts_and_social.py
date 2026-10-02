@@ -37,6 +37,20 @@ def test_post_creation_author_binding_and_comments(
     assert like_res.json()["is_liked"] is True
     assert like_res.json()["likes_count"] == 1
 
+    # 2b. User 2 unlikes the post via DELETE (repeated calls remain False)
+    unlike_res = client.delete(f"/api/v1/posts/{post_id}/like", headers=user_2_headers)
+    assert unlike_res.status_code == 200
+    assert unlike_res.json()["is_liked"] is False
+    assert unlike_res.json()["likes_count"] == 0
+
+    unlike_repeat = client.delete(f"/api/v1/posts/{post_id}/like", headers=user_2_headers)
+    assert unlike_repeat.status_code == 200
+    assert unlike_repeat.json()["is_liked"] is False
+    assert unlike_repeat.json()["likes_count"] == 0
+
+    # Re-like for comments
+    client.post(f"/api/v1/posts/{post_id}/like", headers=user_2_headers)
+
     # 3. User 2 adds a comment
     comment_payload = {
         "content": "Check out Practical Packet Analysis and CyberDefenders labs!",

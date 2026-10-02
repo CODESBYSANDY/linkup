@@ -75,9 +75,19 @@ def get_current_user(
             is_onboarded=False,
         )
         db.add(profile)
-        db.commit()
-        db.refresh(user)
-        logger.info("Provisioned new PostgreSQL user for Firebase UID %s", firebase_uid)
+        try:
+            db.commit()
+            db.refresh(user)
+            logger.info("Provisioned new PostgreSQL user for Firebase UID %s", firebase_uid)
+        except Exception:
+            db.rollback()
+            # Handle concurrent race condition: user was provisioned by another parallel thread
+            user = db.execute(stmt).scalar_one_or_none()
+            if user is None:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to initialize user session.",
+                )
 
     if not user.is_active:
         raise HTTPException(

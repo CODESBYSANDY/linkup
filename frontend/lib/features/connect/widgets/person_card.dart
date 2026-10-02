@@ -17,6 +17,8 @@ class PersonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return ValueListenableBuilder(
       valueListenable: AppServices.auth.userNotifier,
       builder: (context, user, _) {
@@ -29,12 +31,12 @@ class PersonCard extends StatelessWidget {
 
         if (isConnected) {
           buttonText = 'Connected ✓';
-          btnBg = AppColors.surfaceSecondary;
-          btnFg = AppColors.softLavender;
+          btnBg = isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary;
+          btnFg = isDark ? AppColors.primaryLight : AppColors.softLavender;
         } else if (isPending) {
           buttonText = 'Pending';
-          btnBg = AppColors.surfaceElevated;
-          btnFg = AppColors.textMuted;
+          btnBg = isDark ? AppColors.darkSurfaceElevated : AppColors.surfaceElevated;
+          btnFg = isDark ? AppColors.darkTextMuted : AppColors.textMuted;
         }
 
         return Material(
@@ -51,9 +53,9 @@ class PersonCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: isDark ? AppColors.darkSurface : AppColors.surface,
                 borderRadius: AppRadii.cardRadius,
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,19 +83,26 @@ class PersonCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(person.name, style: AppTextStyles.titleMedium),
+                            Text(
+                              person.name,
+                              style: AppTextStyles.titleMedium.copyWith(
+                                color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                              ),
+                            ),
                             const SizedBox(height: 2),
                             Text(
                               person.role,
                               style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.softLavender,
+                                color: isDark ? AppColors.primaryLight : AppColors.softLavender,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               '${person.college} · ${person.year}',
-                              style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+                              style: AppTextStyles.caption.copyWith(
+                                color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
+                              ),
                             ),
                           ],
                         ),
@@ -114,7 +123,6 @@ class PersonCard extends StatelessWidget {
                                           : 'Disconnected from ${person.name}',
                                 ),
                                 duration: const Duration(seconds: 1),
-                                backgroundColor: AppColors.surfaceElevated,
                               ),
                             );
                           }
@@ -142,13 +150,15 @@ class PersonCard extends StatelessWidget {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceSecondary,
+                          color: isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary,
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: AppColors.borderSubtle),
+                          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.borderSubtle),
                         ),
                         child: Text(
                           s,
-                          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+                          style: AppTextStyles.caption.copyWith(
+                            color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                          ),
                         ),
                       );
                     }).toList(),
@@ -158,7 +168,9 @@ class PersonCard extends StatelessWidget {
 
                   Text(
                     '👥 ${person.mutualCount} mutual connections & matching interests',
-                    style: AppTextStyles.caption.copyWith(color: AppColors.textTertiary),
+                    style: AppTextStyles.caption.copyWith(
+                      color: isDark ? AppColors.darkTextTertiary : AppColors.textTertiary,
+                    ),
                   ),
                 ],
               ),

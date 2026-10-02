@@ -385,4 +385,9 @@ class CommunityRepository {
       return true;
     }).toList();
   }
+
+  /// Resets user-specific saved posts and state on logout.
+  void reset() {
+    _savedPostsNotifier.value = [];
+  }
 }

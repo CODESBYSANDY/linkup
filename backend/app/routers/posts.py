@@ -130,8 +130,8 @@ def unlike_post(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Unlike post."""
-    result = post_service.toggle_like_post(current_user, post_id, db)
+    """Idempotently unlike post."""
+    result = post_service.unlike_post(current_user, post_id, db)
     return {"post_id": str(post_id), **result}
 
 
@@ -158,8 +158,8 @@ def unsave_post(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Unsave post."""
-    is_saved = post_service.toggle_save_post(current_user, post_id, db)
+    """Idempotently unsave post."""
+    is_saved = post_service.unsave_post(current_user, post_id, db)
     return {"post_id": str(post_id), "is_saved": is_saved}
 
 

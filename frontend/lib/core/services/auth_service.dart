@@ -31,6 +31,31 @@ abstract class AuthService {
     required String password,
   });
 
+  /// Signs in with Google using Firebase Authentication.
+  Future<bool> signInWithGoogle();
+
+  /// Starts Firebase phone number verification flow.
+  Future<void> verifyPhoneNumber({
+    required String phoneNumber,
+    required void Function(String verificationId, int? resendToken) onCodeSent,
+    required void Function(String errorMessage) onError,
+    void Function(String verificationId)? onAutoVerified,
+  });
+
+  /// Completes phone authentication using the received OTP code.
+  Future<bool> verifyOtp({
+    required String verificationId,
+    required String smsCode,
+  });
+
+  /// Resends OTP to the specified phone number.
+  Future<void> resendOtp({
+    required String phoneNumber,
+    required int? resendToken,
+    required void Function(String verificationId, int? resendToken) onCodeSent,
+    required void Function(String errorMessage) onError,
+  });
+
   /// Updates profile details (bio, college, branch, year, avatar, interests, skills).
   Future<void> updateProfile(UserProfile updatedProfile);
 

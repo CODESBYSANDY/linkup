@@ -3,6 +3,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/services/app_services.dart';
 import '../../../core/widgets/app_chip.dart';
+import '../../../core/widgets/responsive_content_wrapper.dart';
 import '../../../core/widgets/riko_empty_state.dart';
 import '../../../core/widgets/riko_expression.dart';
 import '../widgets/person_card.dart';
@@ -29,22 +30,27 @@ class _ConnectScreenState extends State<ConnectScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
         elevation: 0,
         automaticallyImplyLeading: widget.showBackButton,
         title: Text(
           'Connect',
           style: AppTextStyles.headlineSmall.copyWith(
             fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search_rounded, color: AppColors.textPrimary),
+            icon: Icon(
+              Icons.search_rounded,
+              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+            ),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const SearchScreen()),
@@ -56,32 +62,34 @@ class _ConnectScreenState extends State<ConnectScreen> {
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Segment Filter Bar
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                children: List.generate(_filters.length, (index) {
-                  final isSelected = _selectedFilterIndex == index;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: AppChip(
-                      label: _filters[index],
-                      isSelected: isSelected,
-                      onSelected: () => setState(() => _selectedFilterIndex = index),
-                    ),
-                  );
-                }),
+        child: ResponsiveContentWrapper(
+          maxWidth: 800,
+          child: Column(
+            children: [
+              // Segment Filter Bar
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Row(
+                  children: List.generate(_filters.length, (index) {
+                    final isSelected = _selectedFilterIndex == index;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: AppChip(
+                        label: _filters[index],
+                        isSelected: isSelected,
+                        onSelected: () => setState(() => _selectedFilterIndex = index),
+                      ),
+                    );
+                  }),
+                ),
               ),
-            ),
 
-            const Divider(height: 1, color: AppColors.borderSubtle),
+              Divider(height: 1, color: isDark ? AppColors.darkBorder : AppColors.borderSubtle),
 
-            // Content List
-            Expanded(
+              // Content List
+              Expanded(
               child: ListenableBuilder(
                 listenable: AppServices.connect,
                 builder: (context, _) {
@@ -225,6 +233,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
