@@ -45,6 +45,10 @@ class Mentor {
   final List<String> topics;
   final List<LearningSession> sessions;
   final bool isRequestedByCurrentUser;
+  final bool isAvailable;
+  final double rating;
+  final int reviewsCount;
+  final String? avatarUrl;
   final DateTime? createdAt;
 
   const Mentor({
@@ -59,8 +63,53 @@ class Mentor {
     required this.topics,
     required this.sessions,
     this.isRequestedByCurrentUser = false,
+    this.isAvailable = true,
+    this.rating = 4.9,
+    this.reviewsCount = 18,
+    this.avatarUrl,
     this.createdAt,
   });
+
+  bool get hasRequested => isRequestedByCurrentUser;
+
+  Mentor copyWith({
+    String? id,
+    String? name,
+    String? role,
+    String? college,
+    String? experience,
+    String? badge,
+    String? about,
+    List<String>? skills,
+    List<String>? topics,
+    List<LearningSession>? sessions,
+    bool? isRequestedByCurrentUser,
+    bool? hasRequested,
+    bool? isAvailable,
+    double? rating,
+    int? reviewsCount,
+    String? avatarUrl,
+    DateTime? createdAt,
+  }) {
+    return Mentor(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      role: role ?? this.role,
+      college: college ?? this.college,
+      experience: experience ?? this.experience,
+      badge: badge ?? this.badge,
+      about: about ?? this.about,
+      skills: skills ?? this.skills,
+      topics: topics ?? this.topics,
+      sessions: sessions ?? this.sessions,
+      isRequestedByCurrentUser: hasRequested ?? isRequestedByCurrentUser ?? this.isRequestedByCurrentUser,
+      isAvailable: isAvailable ?? this.isAvailable,
+      rating: rating ?? this.rating,
+      reviewsCount: reviewsCount ?? this.reviewsCount,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 
   factory Mentor.fromJson(Map<String, dynamic> json) {
     DateTime? parsedDate;
@@ -79,18 +128,38 @@ class Mentor {
           }).toList()
         : <LearningSession>[];
 
+    final collegeOrOrg = json['company_or_institution'] as String? ??
+        json['organization'] as String? ??
+        json['college'] as String? ??
+        'Engineering Institution';
+
+    final expStr = json['experience_years'] != null
+        ? '${json['experience_years']} Years Experience'
+        : json['experience'] as String? ?? '2+ Years';
+
+    final requested = json['has_requested'] as bool? ??
+        json['is_requested_by_current_user'] as bool? ??
+        json['isRequestedByCurrentUser'] as bool? ??
+        false;
+
     return Mentor(
       id: json['id']?.toString() ?? '',
       name: json['name'] as String? ?? 'Knowledge Mentor',
       role: json['role'] as String? ?? 'Mentor',
-      college: json['college'] as String? ?? 'Engineering College',
-      experience: json['experience'] as String? ?? '2+ Years',
+      college: collegeOrOrg,
+      experience: expStr,
       badge: json['badge'] as String? ?? 'Mentor',
-      about: json['about'] as String? ?? '',
-      skills: (json['skills'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      about: json['about'] as String? ?? json['bio'] as String? ?? '',
+      skills: (json['skills'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+          (json['domains'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+          [],
       topics: (json['topics'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       sessions: parsedSessions,
-      isRequestedByCurrentUser: json['is_requested_by_current_user'] as bool? ?? json['isRequestedByCurrentUser'] as bool? ?? false,
+      isRequestedByCurrentUser: requested,
+      isAvailable: json['is_available'] as bool? ?? true,
+      rating: (json['rating'] as num?)?.toDouble() ?? 4.9,
+      reviewsCount: json['reviews_count'] as int? ?? 18,
+      avatarUrl: json['avatar_url'] as String? ?? json['avatarUrl'] as String?,
       createdAt: parsedDate,
     );
   }
@@ -108,6 +177,10 @@ class Mentor {
       'topics': topics,
       'sessions': sessions.map((s) => s.toJson()).toList(),
       'is_requested_by_current_user': isRequestedByCurrentUser,
+      'is_available': isAvailable,
+      'rating': rating,
+      'reviews_count': reviewsCount,
+      'avatar_url': avatarUrl,
       'created_at': createdAt?.toIso8601String(),
     };
   }

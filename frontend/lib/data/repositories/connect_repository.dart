@@ -237,7 +237,7 @@ class ConnectRepository extends ChangeNotifier {
         'page': page,
         'limit': limit,
       };
-      if (query.isNotEmpty) queryParams['query'] = query;
+      if (query.isNotEmpty) queryParams['search'] = query;
 
       final response = await ApiClient.instance.get('users', queryParams: queryParams);
       if (response is Map && response['items'] is List) {
@@ -284,6 +284,77 @@ class ConnectRepository extends ChangeNotifier {
     } catch (e) {
       debugPrint('[ConnectRepository] Backend mentors fetch notice: $e');
     }
+  }
+
+  /// Toggles peer connection via POST /api/v1/connections/{userId}.
+  Future<bool> toggleConnect(String userId) async {
+    final currentPeople = List<Person>.from(_peopleNotifier.value);
+    final index = currentPeople.indexWhere((p) => p.id == userId);
+    if (index != -1) {
+      final person = currentPeople[index];
+      final isConnected = person.connectionStatus == 'connected' || person.connectionStatus == 'ACCEPTED';
+      final newStatus = isConnected ? 'none' : 'pending';
+      currentPeople[index] = person.copyWith(connectionStatus: newStatus);
+      _peopleNotifier.value = currentPeople;
+      notifyListeners();
+
+      try {
+        await ApiClient.instance.post('connections/$userId');
+        return true;
+      } catch (e) {
+        debugPrint('[ConnectRepository] Toggle connect sync: $e');
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Toggles group membership via POST /api/v1/groups/{groupId}/join.
+  Future<bool> toggleJoinGroup(String groupId) async {
+    final currentGroups = List<Group>.from(_groupsNotifier.value);
+    final index = currentGroups.indexWhere((g) => g.id == groupId);
+    if (index != -1) {
+      final group = currentGroups[index];
+      final isJoined = group.isJoinedByCurrentUser;
+      currentGroups[index] = group.copyWith(
+        isJoinedByCurrentUser: !isJoined,
+        membersCount: !isJoined ? group.membersCount + 1 : (group.membersCount - 1).clamp(0, 999999),
+      );
+      _groupsNotifier.value = currentGroups;
+      notifyListeners();
+
+      try {
+        await ApiClient.instance.post('groups/$groupId/join');
+        return true;
+      } catch (e) {
+        debugPrint('[ConnectRepository] Toggle group membership: $e');
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Toggles mentorship request via POST /api/v1/mentors/{mentorId}/request.
+  Future<bool> requestMentor(String mentorId, {String? note}) async {
+    final currentMentors = List<Mentor>.from(_mentorsNotifier.value);
+    final index = currentMentors.indexWhere((m) => m.id == mentorId);
+    if (index != -1) {
+      final mentor = currentMentors[index];
+      final hasRequested = mentor.hasRequested;
+      currentMentors[index] = mentor.copyWith(hasRequested: !hasRequested);
+      _mentorsNotifier.value = currentMentors;
+      notifyListeners();
+
+      try {
+        final payload = note != null && note.isNotEmpty ? {'note': note} : null;
+        await ApiClient.instance.post('mentors/$mentorId/request', body: payload);
+        return true;
+      } catch (e) {
+        debugPrint('[ConnectRepository] Request mentor error: $e');
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Refreshes all people, groups, and mentors from the backend.

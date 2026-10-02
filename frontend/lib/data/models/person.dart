@@ -13,7 +13,7 @@ class Person {
   final List<String> interests;
   final int mutualCount;
   final bool isMentor;
-  final String? connectionStatus; // None, "PENDING", "ACCEPTED"
+  final String? connectionStatus; // None, "PENDING", "ACCEPTED", "connected", "pending"
   final DateTime? createdAt;
 
   const Person({
@@ -33,6 +33,45 @@ class Person {
     this.connectionStatus,
     this.createdAt,
   });
+
+  bool get isConnected => connectionStatus == 'connected' || connectionStatus == 'ACCEPTED';
+  bool get isPending => connectionStatus == 'pending' || connectionStatus == 'PENDING';
+
+  Person copyWith({
+    String? id,
+    String? name,
+    String? college,
+    String? branch,
+    String? year,
+    String? role,
+    String? bio,
+    String? avatarInitials,
+    String? avatarUrl,
+    List<String>? skills,
+    List<String>? interests,
+    int? mutualCount,
+    bool? isMentor,
+    String? connectionStatus,
+    DateTime? createdAt,
+  }) {
+    return Person(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      college: college ?? this.college,
+      branch: branch ?? this.branch,
+      year: year ?? this.year,
+      role: role ?? this.role,
+      bio: bio ?? this.bio,
+      avatarInitials: avatarInitials ?? this.avatarInitials,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      skills: skills ?? this.skills,
+      interests: interests ?? this.interests,
+      mutualCount: mutualCount ?? this.mutualCount,
+      isMentor: isMentor ?? this.isMentor,
+      connectionStatus: connectionStatus ?? this.connectionStatus,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 
   factory Person.fromJson(Map<String, dynamic> json) {
     DateTime? parsedDate;
