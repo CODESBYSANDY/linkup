@@ -4,7 +4,6 @@ import 'package:linkup/core/network/api_exceptions.dart';
 import 'package:linkup/core/services/api_client.dart';
 import 'package:linkup/data/models/opportunity.dart';
 import 'package:linkup/data/models/post.dart';
-import 'package:linkup/data/models/comment.dart';
 import 'package:linkup/data/models/user_profile.dart';
 import 'package:linkup/data/models/person.dart';
 import 'package:linkup/data/models/group.dart';

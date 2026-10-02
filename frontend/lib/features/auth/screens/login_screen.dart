@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../../app/routes.dart';
-import '../../../app/theme/app_colors.dart';
-import '../../../app/theme/app_text_styles.dart';
-import '../../../core/services/app_services.dart';
-import '../../../core/widgets/app_background.dart';
-import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/riko_avatar.dart';
-import '../../../core/widgets/riko_expression.dart';
 
-/// Screen allowing students to log in locally or continue with Google / Guest.
+import '../../../app/routes.dart';
+import '../../../core/services/app_services.dart';
+import '../widgets/auth_divider.dart';
+import '../widgets/auth_text_field.dart';
+import '../widgets/auth_top_bar.dart';
+import '../widgets/google_auth_button.dart';
+import '../widgets/primary_auth_button.dart';
+import '../widgets/riko_auth_background.dart';
+import '../widgets/riko_auth_hero.dart';
+import '../widgets/riko_brand_header.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -18,10 +20,17 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(text: 'sandeep@student.linkup.dev');
-  final _passwordController = TextEditingController(text: 'password123');
-  bool _obscurePassword = true;
+
+  final _emailController =
+      TextEditingController(text: 'sandeep@student.linkup.dev');
+  final _passwordController =
+      TextEditingController(text: 'password123');
+
   bool _isLoading = false;
+
+  static const Color navy = Color(0xFF111847);
+  static const Color purple = Color(0xFF7C3AED);
+  static const Color muted = Color(0xFF68709A);
 
   @override
   void dispose() {
@@ -30,213 +39,303 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // ============================================================
+  // AUTH HANDLERS
+  // ============================================================
+
   Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
 
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 350));
-    await AppServices.auth.login(
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
-    );
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
-    if (AppServices.auth.currentUser?.isOnboarded == false) {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
-    } else {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.main);
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await AppServices.auth.login(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      if (AppServices.auth.currentUser?.isOnboarded == false) {
+        Navigator.of(context).pushReplacementNamed(
+          AppRoutes.onboarding,
+        );
+      } else {
+        Navigator.of(context).pushReplacementNamed(
+          AppRoutes.main,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Unable to sign in. Please check your details.',
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: navy,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  Future<void> _handleGuestLogin() async {
-    setState(() => _isLoading = true);
-    await AppServices.auth.loginAsGuest();
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-    Navigator.of(context).pushReplacementNamed(AppRoutes.main);
+  void _handleForgotPassword() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: const Text(
+            'Reset Password',
+            style: TextStyle(
+              color: navy,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          content: const Text(
+            'Password reset will be connected with Firebase authentication later.',
+            style: TextStyle(
+              color: muted,
+              height: 1.4,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Got it',
+                style: TextStyle(
+                  color: purple,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
+
+  void _handleGoogleLogin() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Google authentication will be connected with Firebase later.',
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: navy,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: AppBackground(
-        showAmbientGlow: true,
-        showParticles: true,
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _formKey,
+      backgroundColor: const Color(0xFFFAF9FF),
+      resizeToAvoidBottomInset: true,
+      body: RikoAuthBackground(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenHeight = constraints.maxHeight;
+
+            // Large, prominent Riko hero sizing
+            final heroHeight = screenHeight < 700
+                ? 190.0
+                : screenHeight < 800
+                    ? 225.0
+                    : 250.0;
+
+            final isHeaderCompact = screenHeight < 720;
+            final fieldSpacing = screenHeight < 750 ? 10.0 : 13.0;
+
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Riko Mascot Hero Badge
-                    Center(
-                      child: Column(
-                        children: [
-                          const RikoAvatar(
-                            expression: RikoExpression.happy,
-                            size: 78,
-                            showGlow: true,
-                            showBadge: true,
-                          ),
-                          const SizedBox(height: 14),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
+                    // Top Navigation Bar (Only Back Button, top-right removed)
+                    AuthTopBar(
+                      onBack: () {
+                        Navigator.of(context).maybePop();
+                      },
+                      showBackButton: true,
+                    ),
+
+                    // Scrollable & Responsive Main Content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const ClampingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Text(
-                                'Riko',
-                                style: AppTextStyles.headlineMedium.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.textPrimary,
+                              // Large 3D Riko Hero Artwork
+                              RikoAuthHero(height: heroHeight),
+
+                              const SizedBox(height: 6),
+
+                              // Riko Brand & Welcome back Title
+                              RikoBrandHeader(
+                                title: 'Welcome back',
+                                subtitle: 'Continue exploring opportunities\nwith Riko.',
+                                isCompact: isHeaderCompact,
+                              ),
+
+                              // Generous breathing room between subtitle and email input box
+                              SizedBox(height: isHeaderCompact ? 16 : 22),
+
+                              // Email Address Input
+                              AuthTextField(
+                                controller: _emailController,
+                                hintText: 'Email address',
+                                prefixIcon: Icons.mail_outline_rounded,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Enter your email';
+                                  }
+                                  if (!value.contains('@')) {
+                                    return 'Enter a valid email';
+                                  }
+                                  return null;
+                                },
+                              ),
+
+                              SizedBox(height: fieldSpacing),
+
+                              // Password Input
+                              AuthTextField(
+                                controller: _passwordController,
+                                hintText: 'Password',
+                                prefixIcon: Icons.lock_outline_rounded,
+                                isPassword: true,
+                                textInputAction: TextInputAction.done,
+                                onFieldSubmitted: (_) => _handleLogin(),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Enter your password';
+                                  }
+                                  return null;
+                                },
+                              ),
+
+                              // Forgot Password
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 4, bottom: 2),
+                                  child: GestureDetector(
+                                    onTap: _handleForgotPassword,
+                                    behavior: HitTestBehavior.opaque,
+                                    child: const Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                      child: Text(
+                                        'Forgot password?',
+                                        style: TextStyle(
+                                          color: purple,
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.auto_awesome, size: 16, color: AppColors.primaryBright),
+
+                              const SizedBox(height: 8),
+
+                              // Primary Sign In Button
+                              PrimaryAuthButton(
+                                text: 'Sign In',
+                                isLoading: _isLoading,
+                                onPressed: _handleLogin,
+                              ),
+
+                              const SizedBox(height: 6),
+
+                              // Divider
+                              const AuthDivider(text: 'or continue with'),
+
+                              const SizedBox(height: 6),
+
+                              // Google Auth Button with official Google Logo
+                              GoogleAuthButton(
+                                onPressed: _handleGoogleLogin,
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              // Create Account Link
+                              Wrap(
+                                alignment: WrapAlignment.center,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  const Text(
+                                    "Don't have an account? ",
+                                    style: TextStyle(
+                                      color: muted,
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context).pushNamed(AppRoutes.register);
+                                    },
+                                    child: const Text(
+                                      'Create account',
+                                      style: TextStyle(
+                                        color: purple,
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 24),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Title & Subtitle
-                    const Text(
-                      'Welcome back',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.displaySmall,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Continue exploring opportunities with Riko.',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-
-                    const SizedBox(height: 28),
-
-                    // Email Field
-                    Text('Student Email', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
-                      decoration: const InputDecoration(
-                        hintText: 'e.g. name@student.college.edu',
-                        prefixIcon: Icon(Icons.email_outlined, size: 20),
-                      ),
-                      validator: (val) {
-                        if (val == null || val.trim().isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        if (!val.contains('@')) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Password Field
-                    Text('Password', style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary)),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _handleLogin(),
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
-                      decoration: InputDecoration(
-                        hintText: 'Enter your password',
-                        prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                            size: 20,
-                            color: AppColors.textMuted,
-                          ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
-                      ),
-                      validator: (val) {
-                        if (val == null || val.isEmpty) {
-                          return 'Please enter your password';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Sign In Button
-                    AppButton(
-                      text: 'Sign In',
-                      onPressed: _handleLogin,
-                      isLoading: _isLoading,
-                      variant: AppButtonVariant.primary,
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    // Google Mock Button
-                    AppButton(
-                      text: 'Continue with Google',
-                      onPressed: _handleGuestLogin,
-                      icon: Icons.g_mobiledata_rounded,
-                      variant: AppButtonVariant.secondary,
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // Continue as Guest Button
-                    AppButton(
-                      text: 'Continue as Guest',
-                      onPressed: _handleGuestLogin,
-                      variant: AppButtonVariant.ghost,
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Don't have an account
-                    Center(
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            "Don't have an account? ",
-                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).pushNamed(AppRoutes.register);
-                            },
-                            child: Text(
-                              'Create Account',
-                              style: AppTextStyles.labelMedium.copyWith(
-                                color: AppColors.softLavender,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

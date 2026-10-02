@@ -28,10 +28,11 @@ void main() {
 
     // Verify Login Screen
     expect(find.text('Welcome back'), findsOneWidget);
-    expect(find.text('Continue as Guest'), findsOneWidget);
+    expect(find.text('Sign In'), findsOneWidget);
+    expect(find.text('Continue with Google'), findsOneWidget);
 
-    // Tap Continue as Guest
-    await tester.tap(find.text('Continue as Guest'));
+    // Tap Sign In
+    await tester.tap(find.text('Sign In'));
     await tester.pumpAndSettle();
 
     // Verify Home Screen elements

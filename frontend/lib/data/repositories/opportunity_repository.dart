@@ -209,7 +209,7 @@ class OpportunityRepository {
         _hasNext = response['has_next'] as bool? ?? false;
 
         if (page == 1 || isRefresh) {
-          _opportunitiesNotifier.value = items.isNotEmpty ? items : [];
+          _opportunitiesNotifier.value = items.isNotEmpty ? items : _initialOpportunities;
         } else {
           _opportunitiesNotifier.value = [..._opportunitiesNotifier.value, ...items];
         }
@@ -233,6 +233,38 @@ class OpportunityRepository {
       }
     } catch (e) {
       debugPrint('[OpportunityRepository] Saved opportunities sync: $e');
+    }
+  }
+
+  /// Toggles saving an opportunity with optimistic UI and live API sync via POST /api/v1/opportunities/{id}/save.
+  Future<void> toggleSaveOpportunity(String opportunityId) async {
+    final currentList = List<Opportunity>.from(_opportunitiesNotifier.value);
+    final index = currentList.indexWhere((o) => o.id == opportunityId);
+    if (index != -1) {
+      final opp = currentList[index];
+      final isSaved = !opp.isSavedByCurrentUser;
+      currentList[index] = opp.copyWith(isSavedByCurrentUser: isSaved);
+      _opportunitiesNotifier.value = currentList;
+
+      final currentSaved = List<Opportunity>.from(_savedOpportunitiesNotifier.value);
+      if (isSaved) {
+        if (!currentSaved.any((o) => o.id == opportunityId)) {
+          currentSaved.add(currentList[index]);
+        }
+      } else {
+        currentSaved.removeWhere((o) => o.id == opportunityId);
+      }
+      _savedOpportunitiesNotifier.value = currentSaved;
+
+      try {
+        if (isSaved) {
+          await ApiClient.instance.post('opportunities/$opportunityId/save');
+        } else {
+          await ApiClient.instance.delete('opportunities/$opportunityId/save');
+        }
+      } catch (e) {
+        debugPrint('[OpportunityRepository] Save toggle notice: $e');
+      }
     }
   }
 
