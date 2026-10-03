@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
@@ -44,29 +46,59 @@ class ApiClient {
     return uri;
   }
 
-  Map<String, String> _buildHeaders({bool isJson = true}) {
+  Future<String?> _resolveToken() async {
+    if (_authToken != null && _authToken!.isNotEmpty) {
+      return _authToken;
+    }
+    try {
+      if (Firebase.apps.isNotEmpty) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          final token = await user.getIdToken();
+          if (token != null && token.isNotEmpty) {
+            _authToken = token;
+            return token;
+          }
+        }
+      }
+    } catch (_) {}
+    return _authToken;
+  }
+
+  Future<Map<String, String>> _buildHeaders({bool isJson = true}) async {
     final headers = <String, String>{
       'Accept': 'application/json',
     };
     if (isJson) {
       headers['Content-Type'] = 'application/json';
     }
-    if (_authToken != null && _authToken!.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $_authToken';
+    final token = await _resolveToken();
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
     }
     return headers;
   }
 
   Future<dynamic> get(String path, {Map<String, dynamic>? queryParams}) async {
     final uri = _buildUri(path, queryParams);
-    return _sendRequest(() => _client.get(uri, headers: _buildHeaders(isJson: false)), 'GET', uri);
+    return _sendRequest(
+      () async {
+        final headers = await _buildHeaders(isJson: false);
+        return _client.get(uri, headers: headers);
+      },
+      'GET',
+      uri,
+    );
   }
 
   Future<dynamic> post(String path, {dynamic body}) async {
     final uri = _buildUri(path);
     final encodedBody = body != null ? jsonEncode(body) : null;
     return _sendRequest(
-      () => _client.post(uri, headers: _buildHeaders(), body: encodedBody),
+      () async {
+        final headers = await _buildHeaders();
+        return _client.post(uri, headers: headers, body: encodedBody);
+      },
       'POST',
       uri,
     );
@@ -76,7 +108,10 @@ class ApiClient {
     final uri = _buildUri(path);
     final encodedBody = body != null ? jsonEncode(body) : null;
     return _sendRequest(
-      () => _client.patch(uri, headers: _buildHeaders(), body: encodedBody),
+      () async {
+        final headers = await _buildHeaders();
+        return _client.patch(uri, headers: headers, body: encodedBody);
+      },
       'PATCH',
       uri,
     );
@@ -86,7 +121,10 @@ class ApiClient {
     final uri = _buildUri(path);
     final encodedBody = body != null ? jsonEncode(body) : null;
     return _sendRequest(
-      () => _client.put(uri, headers: _buildHeaders(), body: encodedBody),
+      () async {
+        final headers = await _buildHeaders();
+        return _client.put(uri, headers: headers, body: encodedBody);
+      },
       'PUT',
       uri,
     );
@@ -95,7 +133,10 @@ class ApiClient {
   Future<dynamic> delete(String path) async {
     final uri = _buildUri(path);
     return _sendRequest(
-      () => _client.delete(uri, headers: _buildHeaders(isJson: false)),
+      () async {
+        final headers = await _buildHeaders(isJson: false);
+        return _client.delete(uri, headers: headers);
+      },
       'DELETE',
       uri,
     );
@@ -106,6 +147,18 @@ class ApiClient {
     try {
       final rootUrl = AppConfig.rootBackendUrl;
       final uri = Uri.parse('$rootUrl/health');
+      final response = await _client.get(uri).timeout(const Duration(seconds: 8));
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Checks backend database readiness at /health/ready
+  Future<bool> checkReadiness() async {
+    try {
+      final rootUrl = AppConfig.rootBackendUrl;
+      final uri = Uri.parse('$rootUrl/health/ready');
       final response = await _client.get(uri).timeout(const Duration(seconds: 8));
       return response.statusCode == 200;
     } catch (_) {
@@ -127,6 +180,23 @@ class ApiClient {
 
       if (AppConfig.enableNetworkLogging) {
         debugPrint('[API] ${response.statusCode} <- $method $uri (Bytes: ${response.bodyBytes.length})');
+      }
+
+      if (response.statusCode == 401) {
+        // Attempt single token refresh retry if user is logged into Firebase
+        try {
+          if (Firebase.apps.isNotEmpty) {
+            final user = FirebaseAuth.instance.currentUser;
+            if (user != null) {
+              final freshToken = await user.getIdToken(true);
+              if (freshToken != null && freshToken.isNotEmpty) {
+                _authToken = freshToken;
+                final retryResponse = await requestFn().timeout(timeout);
+                return _handleResponse(retryResponse, method, uri);
+              }
+            }
+          }
+        } catch (_) {}
       }
 
       return _handleResponse(response, method, uri);

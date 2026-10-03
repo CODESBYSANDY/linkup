@@ -4,75 +4,8 @@ import '../models/notification_item.dart';
 
 /// Repository managing user notifications and read/unread state backed by FastAPI / PostgreSQL.
 class NotificationRepository {
-  static const List<NotificationItem> _initialNotifications = [
-    NotificationItem(
-      id: 'notif_1',
-      title: 'New Connection Request',
-      message: 'Sneha Patel (Year 3 · IT) sent you a connection request.',
-      type: NotificationType.connection,
-      timeAgo: '15m ago',
-      isRead: false,
-    ),
-    NotificationItem(
-      id: 'notif_2',
-      title: 'Closing Soon: CrowdStrike Internship',
-      message: 'The Cybersecurity Analyst Internship deadline is in 4 days. Submit your application!',
-      type: NotificationType.opportunity,
-      timeAgo: '1h ago',
-      isRead: false,
-    ),
-    NotificationItem(
-      id: 'notif_3',
-      title: 'New Upvotes on Your Post',
-      message: 'Ananya Sharma and 3 others upvoted your comment in the Community discussion.',
-      type: NotificationType.like,
-      timeAgo: '3h ago',
-      isRead: false,
-    ),
-    NotificationItem(
-      id: 'notif_4',
-      title: 'New Group Discussion',
-      message: 'Cybersecurity & CTF Builders: New writeup posted for "Wireshark PCAP Analysis Challenge".',
-      type: NotificationType.group,
-      timeAgo: '5h ago',
-      isRead: false,
-    ),
-    NotificationItem(
-      id: 'notif_5',
-      title: 'Mentorship Update',
-      message: 'Rahul Sharma accepted your request for "Practical Packet Analysis Session 1".',
-      type: NotificationType.mentor,
-      timeAgo: '1d ago',
-      isRead: true,
-    ),
-    NotificationItem(
-      id: 'notif_6',
-      title: 'New Answer to Your Question',
-      message: 'Karthik Raja replied to your discussion on C++ vs Rust for competitive programming.',
-      type: NotificationType.comment,
-      timeAgo: '2d ago',
-      isRead: true,
-    ),
-    NotificationItem(
-      id: 'notif_7',
-      title: 'Featured Hackathon Announced',
-      message: 'Global AI Innovation Sprint 2026 by Google Cloud is now open for student team registrations.',
-      type: NotificationType.opportunity,
-      timeAgo: '3d ago',
-      isRead: true,
-    ),
-    NotificationItem(
-      id: 'notif_8',
-      title: 'Welcome to LinkUp! 🎉',
-      message: 'Your student profile is ready. Start by exploring opportunities and joining your college tech groups.',
-      type: NotificationType.group,
-      timeAgo: '4d ago',
-      isRead: true,
-    ),
-  ];
-
   final ValueNotifier<List<NotificationItem>> _notificationsNotifier =
-      ValueNotifier<List<NotificationItem>>(_initialNotifications);
+      ValueNotifier<List<NotificationItem>>([]);
   bool _isLoading = false;
 
   ValueListenable<List<NotificationItem>> get notificationsNotifier => _notificationsNotifier;
@@ -89,7 +22,7 @@ class NotificationRepository {
 
   /// Resets notifications state on user logout to prevent cross-session leakage.
   void reset() {
-    _notificationsNotifier.value = _initialNotifications;
+    _notificationsNotifier.value = [];
     _isLoading = false;
   }
 
@@ -106,9 +39,7 @@ class NotificationRepository {
         final items = (response['items'] as List)
             .map((json) => NotificationItem.fromJson(json as Map<String, dynamic>))
             .toList();
-        if (items.isNotEmpty) {
-          _notificationsNotifier.value = items;
-        }
+        _notificationsNotifier.value = items;
       }
     } catch (e) {
       debugPrint('[NotificationRepository] Backend notifications sync notice: $e');

@@ -1,5 +1,5 @@
 from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, engine_from_config, pool
 from alembic import context
 
 from app.core.config import settings
@@ -24,14 +24,13 @@ if db_url.startswith("postgres://"):
 elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+psycopg://"):
     db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
 
-config.set_main_option("sqlalchemy.url", db_url)
+config.set_main_option("sqlalchemy.url", db_url.replace("%", "%%"))
 
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
-    url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url,
+        url=db_url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -44,9 +43,8 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+    connectable = create_engine(
+        db_url,
         poolclass=pool.NullPool,
     )
 

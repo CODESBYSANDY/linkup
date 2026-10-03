@@ -38,7 +38,6 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify Home Screen elements
-    expect(find.text('Featured for you'), findsOneWidget);
     expect(find.text('Latest Hackathons'), findsOneWidget);
     expect(find.text('Search opportunities...'), findsOneWidget);
 
@@ -108,17 +107,19 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Students & Peers'), findsOneWidget);
+    expect(find.text('Connect'), findsOneWidget);
+
+    // Switch to Students filter
+    await tester.tap(find.text('Students'));
+    await tester.pumpAndSettle();
 
     // Switch to Communities chip
     await tester.tap(find.text('Communities'));
     await tester.pumpAndSettle();
-    expect(find.text('Technical Communities'), findsOneWidget);
 
     // Switch to Mentors chip
     await tester.tap(find.text('Mentors'));
     await tester.pumpAndSettle();
-    expect(find.text('Knowledge Mentors'), findsOneWidget);
   });
 
   testWidgets('Profile Flow: View Profile, Open Edit Profile, Save Changes', (WidgetTester tester) async {

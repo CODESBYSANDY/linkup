@@ -46,7 +46,7 @@ class _RikoAssistantScreenState extends State<RikoAssistantScreen> {
   void initState() {
     super.initState();
     final user = AppServices.auth.currentUser;
-    final name = user?.name.split(' ').first ?? 'Sandeep';
+    final name = (user?.name.trim().isNotEmpty ?? false) ? user!.name.trim().split(' ').first : 'there';
 
     _messages.add(
       ChatMessage(

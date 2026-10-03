@@ -4,18 +4,30 @@ import '../../../core/services/app_services.dart';
 import '../../../core/widgets/responsive_content_wrapper.dart';
 import '../../../core/widgets/riko_empty_state.dart';
 import '../../../core/widgets/riko_expression.dart';
+import '../../../data/models/opportunity.dart';
 import '../widgets/opportunity_card.dart';
 import 'explore_screen.dart';
 
 /// Screen 5: Saved Opportunities Screen
 /// Matches the reference design with clean white cards and friendly Riko empty state.
-class SavedOpportunitiesScreen extends StatelessWidget {
+class SavedOpportunitiesScreen extends StatefulWidget {
   final bool showBackButton;
 
   const SavedOpportunitiesScreen({
     super.key,
     this.showBackButton = false,
   });
+
+  @override
+  State<SavedOpportunitiesScreen> createState() => _SavedOpportunitiesScreenState();
+}
+
+class _SavedOpportunitiesScreenState extends State<SavedOpportunitiesScreen> {
+  @override
+  void initState() {
+    super.initState();
+    AppServices.opportunities.fetchSavedOpportunities();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +37,7 @@ class SavedOpportunitiesScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         scrolledUnderElevation: 0,
-        automaticallyImplyLeading: showBackButton,
+        automaticallyImplyLeading: widget.showBackButton,
         title: const Text(
           'Saved Opportunities',
           style: TextStyle(
@@ -39,14 +51,9 @@ class SavedOpportunitiesScreen extends StatelessWidget {
       body: SafeArea(
         child: ResponsiveContentWrapper(
           maxWidth: 1200,
-          child: ValueListenableBuilder(
-            valueListenable: AppServices.auth.userNotifier,
-            builder: (context, user, _) {
-              final savedIds = user?.savedOpportunityIds ?? [];
-              final savedOpps = AppServices.opportunities.allOpportunities
-                  .where((opp) => savedIds.contains(opp.id))
-                  .toList();
-
+          child: ValueListenableBuilder<List<Opportunity>>(
+            valueListenable: AppServices.opportunities.savedOpportunitiesNotifier,
+            builder: (context, savedOpps, _) {
               if (savedOpps.isEmpty) {
                 return Center(
                   child: RikoEmptyState(
@@ -64,32 +71,39 @@ class SavedOpportunitiesScreen extends StatelessWidget {
                 );
               }
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    child: Text(
-                      '${savedOpps.length} bookmarked opportunities',
-                      style: const TextStyle(
-                        color: Color(0xFF64748B),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+              return RefreshIndicator(
+                color: AppColors.primary,
+                backgroundColor: Colors.white,
+                onRefresh: () async {
+                  await AppServices.opportunities.fetchSavedOpportunities();
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      child: Text(
+                        '${savedOpps.length} bookmarked ${savedOpps.length == 1 ? "opportunity" : "opportunities"}',
+                        style: const TextStyle(
+                          color: Color(0xFF64748B),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: ListView.separated(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                      itemCount: savedOpps.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        return OpportunityCard(opportunity: savedOpps[index]);
-                      },
+                    Expanded(
+                      child: ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        itemCount: savedOpps.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          return OpportunityCard(opportunity: savedOpps[index]);
+                        },
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               );
             },
           ),

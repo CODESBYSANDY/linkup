@@ -31,10 +31,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   void initState() {
     super.initState();
     final user = AppServices.auth.currentUser ?? UserProfile.defaultDemo();
-    _nameController = TextEditingController(text: user.name.isNotEmpty ? user.name : 'Sandeep B');
-    _collegeController = TextEditingController(text: user.college.isNotEmpty ? user.college : 'KPR Institute of Engineering and Technology');
-    _branchController = TextEditingController(text: user.branch.isNotEmpty ? user.branch : 'Computer Science & Engineering');
-    _bioController = TextEditingController(text: user.bio.isNotEmpty ? user.bio : 'Passionate student developer focused on cybersecurity and scalable full-stack applications.');
+    _nameController = TextEditingController(text: user.name);
+    _collegeController = TextEditingController(text: user.college);
+    _branchController = TextEditingController(text: user.branch);
+    _bioController = TextEditingController(text: user.bio);
   }
 
   @override
@@ -169,7 +169,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       onChanged: (_) => setState(() {}),
                       style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
                       decoration: const InputDecoration(
-                        hintText: 'e.g. Sandeep B',
+                        hintText: 'e.g. Alex Johnson',
                         prefixIcon: Icon(Icons.person_outline_rounded, size: 20),
                       ),
                       validator: (val) {

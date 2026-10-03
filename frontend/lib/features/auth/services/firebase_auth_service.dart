@@ -373,7 +373,7 @@ class FirebaseAuthService implements AuthService {
     await _storage.setBool(_isLoggedInKey, true);
     await _storage.setBool(_isGuestKey, true);
 
-    final guestProfile = UserProfile.defaultDemo();
+    final guestProfile = UserProfile.defaultDemo().copyWith(isOnboarded: true);
     _userNotifier.value = guestProfile;
     await _storage.setJson(_userKey, guestProfile.toJson());
 

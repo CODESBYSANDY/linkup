@@ -52,7 +52,9 @@ class _HomeScreenState extends State<HomeScreen> {
           child: ValueListenableBuilder(
             valueListenable: AppServices.auth.userNotifier,
             builder: (context, user, _) {
-              final userName = user?.name.split(' ').first ?? 'Sandeep';
+              final userName = (user?.name.trim().isNotEmpty ?? false)
+                  ? user!.name.trim().split(' ').first
+                  : 'Student';
 
               return ValueListenableBuilder(
                 valueListenable: AppServices.opportunities.opportunitiesNotifier,
@@ -128,21 +130,21 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 24),
 
                           // "Featured for you" Header
-                          _buildSectionHeader(
-                            title: 'Featured for you',
-                            onViewAll: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const ExploreScreen(initialCategory: 'Hackathons'),
-                                ),
-                              );
-                            },
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // Featured Dark Hero Card
                           if (featuredOpp != null) ...[
+                            _buildSectionHeader(
+                              title: 'Featured for you',
+                              onViewAll: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const ExploreScreen(initialCategory: 'Hackathons'),
+                                  ),
+                                );
+                              },
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // Featured Dark Hero Card
                             OpportunityCard(
                               opportunity: featuredOpp,
                               isFeaturedStyle: true,
@@ -157,9 +159,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 _buildDot(isActive: false),
                               ],
                             ),
+                            const SizedBox(height: 24),
                           ],
-
-                          const SizedBox(height: 24),
 
                           // "Latest Hackathons" Header
                           _buildSectionHeader(
@@ -176,15 +177,40 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 12),
 
                           // Latest Hackathons List
-                          ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: displayHackathons.take(4).length,
-                            separatorBuilder: (context, index) => const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              return OpportunityCard(opportunity: displayHackathons[index]);
-                            },
-                          ),
+                          if (displayHackathons.isEmpty)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                              ),
+                              child: const Column(
+                                children: [
+                                  Icon(Icons.event_note_outlined, size: 40, color: Color(0xFF94A3B8)),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'No opportunities available right now',
+                                    style: TextStyle(
+                                      color: Color(0xFF64748B),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: displayHackathons.take(4).length,
+                              separatorBuilder: (context, index) => const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                return OpportunityCard(opportunity: displayHackathons[index]);
+                              },
+                            ),
 
                           const SizedBox(height: 32),
                         ],

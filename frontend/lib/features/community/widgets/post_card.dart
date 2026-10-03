@@ -37,7 +37,7 @@ class PostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final currentUserId = AppServices.auth.currentUser?.id ?? 'demo_user_1';
+    final currentUserId = AppServices.auth.currentUser?.id ?? '';
     final isLiked = post.isLikedBy(currentUserId);
 
     return ValueListenableBuilder(

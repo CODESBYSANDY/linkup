@@ -3,89 +3,9 @@ import '../../core/services/api_client.dart';
 import '../models/post.dart';
 import '../models/comment.dart';
 
-/// Repository managing community posts from FastAPI / PostgreSQL backend with defensive fallback.
+/// Repository managing community posts from FastAPI / PostgreSQL backend.
 class CommunityRepository {
-  static final List<Post> _initialPosts = [
-    Post(
-      id: 'post_1',
-      authorId: 'peer_1',
-      authorName: 'Arun Kumar',
-      authorRole: 'CTF Lead · KPR Institute',
-      authorYear: 'Year 4',
-      authorAvatar: 'AK',
-      type: PostType.knowledge,
-      title: 'Guide: How we cracked the top 10 at National CTF 2026',
-      content: 'Here is our detailed breakdown of the reverse engineering and binary exploitation challenges from last weekend. Key takeaways: always inspect binary symbols first with nm and gdb-peda before jumping into Ghidra decompilation.\n\n1. Analyze format string vulnerabilities.\n2. Leverage ROP chains for NX bypass.\n3. Keep thorough notes in Obsidian during the competition.',
-      tags: const ['Cybersecurity', 'CTF', 'Reverse Engineering', 'Linux'],
-      likedUserIds: const ['user_demo'],
-      timeAgo: '3 hours ago',
-      comments: const [
-        Comment(
-          id: 'comm_1',
-          authorName: 'Ananya Sharma',
-          authorRole: 'Student · CSE',
-          authorAvatar: 'AS',
-          content: 'Super helpful writeup Arun! Did you use pwntools for local exploit scripting?',
-          timeAgo: '2 hours ago',
-        ),
-        Comment(
-          id: 'comm_2',
-          authorName: 'Arun Kumar',
-          authorRole: 'CTF Lead',
-          authorAvatar: 'AK',
-          content: 'Yes! Pwntools + cyclic patterns made shellcode offset calculation much faster.',
-          timeAgo: '1 hour ago',
-        ),
-      ],
-    ),
-    Post(
-      id: 'post_2',
-      authorId: 'peer_2',
-      authorName: 'Sneha Patel',
-      authorRole: 'Open Source Fellow · PSG Tech',
-      authorYear: 'Year 3',
-      authorAvatar: 'SP',
-      type: PostType.project,
-      title: 'Built an open-source Flutter package for real-time mesh networking',
-      content: 'Excited to share MeshPulse, a peer-to-peer Flutter plugin using Bluetooth LE and Wi-Fi Direct for zero-internet emergency communication in college campuses. Looking for contributors with iOS CoreBluetooth background!',
-      tags: const ['Flutter', 'Open Source', 'Dart', 'Networking'],
-      likedUserIds: const [],
-      timeAgo: '8 hours ago',
-      comments: const [],
-    ),
-    Post(
-      id: 'post_3',
-      authorId: 'peer_5',
-      authorName: 'Karthik Raja',
-      authorRole: 'CP Specialist · Kumaraguru Tech',
-      authorYear: 'Year 2',
-      authorAvatar: 'KR',
-      type: PostType.question,
-      title: 'DP on Trees vs Centroid Decomposition: When is Centroid required?',
-      content: 'Practicing hard tree problems on Codeforces. When finding paths with property P, when should one choose Centroid Decomposition over Heavy-Light Decomposition + Segment Tree? Looking for intuitive problem patterns.',
-      tags: const ['Algorithms', 'Data Structures', 'Competitive Programming'],
-      likedUserIds: const [],
-      timeAgo: '1 day ago',
-      comments: const [],
-    ),
-    Post(
-      id: 'post_4',
-      authorId: 'peer_4',
-      authorName: 'Deepak V',
-      authorRole: 'Cloud Architect Intern · KPR Institute',
-      authorYear: 'Year 4',
-      authorAvatar: 'DV',
-      type: PostType.resource,
-      title: 'Curated Kubernetes & Cloud Architecture Roadmap for Placements (2026)',
-      content: 'Compiled a free Notion document covering: CKA exam tips, Docker multi-stage builds, Terraform modules, Helm chart design, and real interview scenario questions asked at major cloud consulting firms.',
-      tags: const ['Cloud', 'DevOps', 'Kubernetes', 'Resources'],
-      likedUserIds: const ['user_demo'],
-      timeAgo: '2 days ago',
-      comments: const [],
-    ),
-  ];
-
-  final ValueNotifier<List<Post>> _postsNotifier = ValueNotifier<List<Post>>(_initialPosts);
+  final ValueNotifier<List<Post>> _postsNotifier = ValueNotifier<List<Post>>([]);
   final ValueNotifier<List<Post>> _savedPostsNotifier = ValueNotifier<List<Post>>([]);
   bool _isLoading = false;
   int _currentPage = 1;
@@ -137,13 +57,13 @@ class CommunityRepository {
         _hasNext = response['has_next'] as bool? ?? false;
 
         if (page == 1 || isRefresh) {
-          _postsNotifier.value = items.isNotEmpty ? items : [];
+          _postsNotifier.value = items;
         } else {
           _postsNotifier.value = [..._postsNotifier.value, ...items];
         }
       }
     } catch (e) {
-      debugPrint('[CommunityRepository] Backend fetch notice (using cache): $e');
+      debugPrint('[CommunityRepository] Backend fetch notice: $e');
     } finally {
       _isLoading = false;
     }
@@ -166,6 +86,9 @@ class CommunityRepository {
 
   /// Creates a new post via backend API (author derived securely by backend).
   Future<bool> addPost(Post newPost) async {
+    // Optimistic UI update
+    _postsNotifier.value = [newPost, ..._postsNotifier.value];
+
     try {
       final payload = {
         'type': newPost.type.name,
@@ -180,15 +103,18 @@ class CommunityRepository {
       final response = await ApiClient.instance.post('posts', body: payload);
       if (response is Map<String, dynamic>) {
         final created = Post.fromJson(response);
-        _postsNotifier.value = [created, ..._postsNotifier.value];
+        final current = List<Post>.from(_postsNotifier.value);
+        final idx = current.indexWhere((p) => p.id == newPost.id);
+        if (idx != -1) {
+          current[idx] = created;
+          _postsNotifier.value = current;
+        }
         return true;
       }
     } catch (e) {
       debugPrint('[CommunityRepository] Error adding post to backend: $e');
     }
-    // Fallback local insertion
-    _postsNotifier.value = [newPost, ..._postsNotifier.value];
-    return true;
+    return false;
   }
 
   /// Updates an existing post via PATCH /api/v1/posts/{id}.
@@ -359,11 +285,7 @@ class CommunityRepository {
     try {
       return _postsNotifier.value.firstWhere((p) => p.id == id);
     } catch (_) {
-      try {
-        return _initialPosts.firstWhere((p) => p.id == id);
-      } catch (_) {
-        return null;
-      }
+      return null;
     }
   }
 
@@ -389,5 +311,6 @@ class CommunityRepository {
   /// Resets user-specific saved posts and state on logout.
   void reset() {
     _savedPostsNotifier.value = [];
+    _postsNotifier.value = [];
   }
 }

@@ -120,7 +120,7 @@ class LocalAuthService implements AuthService {
       }
     } catch (_) {}
 
-    final guestProfile = UserProfile.defaultDemo();
+    final guestProfile = UserProfile.defaultDemo().copyWith(isOnboarded: true);
     _userNotifier.value = guestProfile;
     await _storage.setBool(_isLoggedInKey, true);
     await _storage.setJson(_userKey, guestProfile.toJson());

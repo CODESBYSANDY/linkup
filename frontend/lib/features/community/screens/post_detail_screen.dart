@@ -37,9 +37,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final user = AppServices.auth.currentUser;
     final newComment = Comment(
       id: 'c_${DateTime.now().millisecondsSinceEpoch}',
-      authorName: user?.name ?? 'Sandeep B',
-      authorRole: user?.branch.isNotEmpty == true ? '${user?.year} · ${user?.branch}' : 'Year 3 · Student Developer',
-      authorAvatar: user?.avatarInitials ?? 'SB',
+      authorName: (user?.name.isNotEmpty == true) ? user!.name : 'Student',
+      authorRole: (user?.branch.isNotEmpty == true && user?.year.isNotEmpty == true)
+          ? '${user?.year} · ${user?.branch}'
+          : 'Student',
+      authorAvatar: user?.avatarInitials ?? (user?.name.isNotEmpty == true ? user!.name[0].toUpperCase() : 'S'),
       content: text,
       timeAgo: 'Just now',
     );
@@ -59,7 +61,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId = AppServices.auth.currentUser?.id ?? 'demo_user_1';
+    final currentUserId = AppServices.auth.currentUser?.id ?? '';
 
     return ValueListenableBuilder(
       valueListenable: AppServices.community.postsNotifier,

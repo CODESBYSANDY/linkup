@@ -2,155 +2,10 @@ import 'package:flutter/foundation.dart';
 import '../../core/services/api_client.dart';
 import '../models/opportunity.dart';
 
-/// Repository managing opportunity data from FastAPI / PostgreSQL backend with defensive fallback.
+/// Repository managing opportunity data directly from FastAPI / PostgreSQL backend.
 class OpportunityRepository {
-  static const List<Opportunity> _initialOpportunities = [
-    Opportunity(
-      id: 'opp_1',
-      title: 'Google GenAI Hackathon 2025',
-      organization: 'Google',
-      category: 'Hackathons',
-      domain: 'AI / ML',
-      description: 'Build innovative AI-powered solutions to solve real-world problems. Open to all students across India. Collaborate in teams of up to 4 to craft transformative generative AI applications using Gemini 2.0 and Vertex AI.',
-      eligibility: 'All college undergraduate & postgraduate students in India',
-      skills: ['Python', 'Gemini API', 'Vertex AI', 'Flutter', 'FastAPI'],
-      location: 'Online',
-      mode: 'Online',
-      prize: '₹5,00,000',
-      deadline: '2026-10-18',
-      source: 'Google Developer Student Clubs',
-      registrationUrl: 'https://developers.google.com/community/gdsc',
-      isFeatured: true,
-      daysLeft: 12,
-    ),
-    Opportunity(
-      id: 'opp_2',
-      title: 'Product Design Intern',
-      organization: 'Flipkart',
-      category: 'Internships',
-      domain: 'Product & Design',
-      description: 'Join the consumer experience team at Flipkart to design delightful mobile and web interfaces for over 500 million shoppers.',
-      eligibility: 'Pre-final and Final year students in Design, CS, or related disciplines',
-      skills: ['Figma', 'UI/UX', 'Design Systems', 'User Research', 'Prototyping'],
-      location: 'Bengaluru / Remote',
-      mode: 'Remote',
-      prize: 'Stipend ₹65,000/mo',
-      salary: '₹65,000/month',
-      deadline: '2026-10-11',
-      source: 'Flipkart Careers',
-      registrationUrl: 'https://flipkartcareers.com',
-      isClosingSoon: true,
-      daysLeft: 5,
-    ),
-    Opportunity(
-      id: 'opp_3',
-      title: 'Cybersecurity Workshop',
-      organization: 'ISRO',
-      category: 'Events',
-      domain: 'Cybersecurity',
-      description: 'Hands-on practical training on satellite telemetry network security, threat mitigation, and SCADA infrastructure defense.',
-      eligibility: 'Open to 2nd, 3rd, and 4th year Engineering students',
-      skills: ['Network Security', 'Wireshark', 'SCADA', 'Cryptography', 'Linux'],
-      location: 'Online Workshop',
-      mode: 'Online',
-      prize: 'Free Certification',
-      deadline: '2026-10-09',
-      source: 'ISRO Student Program',
-      registrationUrl: 'https://isro.gov.in',
-      isClosingSoon: true,
-      daysLeft: 3,
-    ),
-    Opportunity(
-      id: 'opp_4',
-      title: 'Code for Impact',
-      organization: 'Tata Consultancy Services',
-      category: 'Hackathons',
-      domain: 'Software Engineering',
-      description: 'National coding hackathon focused on sustainable supply chains, clean energy tech, and accessible healthcare solutions.',
-      eligibility: 'All engineering & science undergraduates',
-      skills: ['Java', 'Spring Boot', 'React', 'PostgreSQL', 'Docker'],
-      location: 'Online',
-      mode: 'Online',
-      prize: '₹3,00,000',
-      deadline: '2026-10-21',
-      source: 'TCS Campus Portal',
-      registrationUrl: 'https://tcs.com/careers',
-      daysLeft: 15,
-    ),
-    Opportunity(
-      id: 'opp_5',
-      title: 'AI Innovation Challenge',
-      organization: 'Microsoft',
-      category: 'Hackathons',
-      domain: 'AI / ML',
-      description: 'Build enterprise-grade copilot extensions and autonomous agent workflows on Microsoft Azure AI Studio.',
-      eligibility: 'Enrolled students worldwide',
-      skills: ['Azure OpenAI', 'Semantic Kernel', 'TypeScript', 'Python'],
-      location: 'Online',
-      mode: 'Online',
-      prize: '₹5,00,000',
-      deadline: '2026-10-14',
-      source: 'Microsoft Imagine Cup',
-      registrationUrl: 'https://imaginecup.microsoft.com',
-      daysLeft: 8,
-    ),
-    Opportunity(
-      id: 'opp_6',
-      title: 'Unstop x AWS Hackathon',
-      organization: 'AWS',
-      category: 'Hackathons',
-      domain: 'Cloud & DevOps',
-      description: 'Architect resilient serverless applications, containerized event pipelines, and scalable cloud native systems.',
-      eligibility: 'Undergraduate and Master students',
-      skills: ['AWS Lambda', 'DynamoDB', 'Docker', 'Terraform', 'Node.js'],
-      location: 'Online',
-      mode: 'Online',
-      prize: '₹3,00,000',
-      deadline: '2026-10-16',
-      source: 'AWS Student Community',
-      registrationUrl: 'https://aws.amazon.com/events',
-      daysLeft: 10,
-    ),
-    Opportunity(
-      id: 'opp_7',
-      title: 'National Cyber Challenge',
-      organization: 'IIT Bombay',
-      category: 'Hackathons',
-      domain: 'Cybersecurity',
-      description: 'Flagship collegiate CTF challenge featuring reverse engineering, binary exploitation, web vulnerabilities, and forensics.',
-      eligibility: 'Student teams of 1-3 members',
-      skills: ['Reverse Engineering', 'GDB', 'Web Security', 'Forensics', 'C'],
-      location: 'Online',
-      mode: 'Online',
-      prize: '₹2,50,000',
-      deadline: '2026-10-13',
-      source: 'IIT Bombay Techfest',
-      registrationUrl: 'https://techfest.org',
-      daysLeft: 7,
-    ),
-    Opportunity(
-      id: 'opp_8',
-      title: 'Security Analyst Internship',
-      organization: 'CrowdStrike',
-      category: 'Internships',
-      domain: 'Cybersecurity',
-      description: 'Work alongside threat intelligence specialists on incident triage, malware behavioral analysis, and kernel endpoint monitoring.',
-      eligibility: '3rd and 4th year Computer Science or Cybersecurity students',
-      skills: ['Threat Hunting', 'SIEM', 'Python', 'Linux', 'Memory Forensics'],
-      location: 'Bengaluru / Hybrid',
-      mode: 'Hybrid',
-      prize: '₹45,000/mo',
-      salary: '₹45,000/month',
-      deadline: '2026-10-10',
-      source: 'CrowdStrike Careers',
-      registrationUrl: 'https://crowdstrike.com/careers',
-      isClosingSoon: true,
-      daysLeft: 4,
-    ),
-  ];
-
   final ValueNotifier<List<Opportunity>> _opportunitiesNotifier =
-      ValueNotifier<List<Opportunity>>(_initialOpportunities);
+      ValueNotifier<List<Opportunity>>([]);
   final ValueNotifier<List<Opportunity>> _savedOpportunitiesNotifier =
       ValueNotifier<List<Opportunity>>([]);
 
@@ -209,13 +64,13 @@ class OpportunityRepository {
         _hasNext = response['has_next'] as bool? ?? false;
 
         if (page == 1 || isRefresh) {
-          _opportunitiesNotifier.value = items.isNotEmpty ? items : _initialOpportunities;
+          _opportunitiesNotifier.value = items;
         } else {
           _opportunitiesNotifier.value = [..._opportunitiesNotifier.value, ...items];
         }
       }
     } catch (e) {
-      debugPrint('[OpportunityRepository] Backend fetch notice (using local cache): $e');
+      debugPrint('[OpportunityRepository] Backend fetch notice: $e');
     } finally {
       _isLoading = false;
     }
@@ -262,6 +117,7 @@ class OpportunityRepository {
         } else {
           await ApiClient.instance.delete('opportunities/$opportunityId/save');
         }
+        await fetchSavedOpportunities();
       } catch (e) {
         debugPrint('[OpportunityRepository] Save toggle notice: $e');
       }
@@ -281,7 +137,7 @@ class OpportunityRepository {
     return getById(id);
   }
 
-  /// Local quick filter helper for instantaneous UI searches and offline scenarios.
+  /// Local quick filter helper for instantaneous UI searches.
   List<Opportunity> filterOpportunities({
     String query = '',
     String category = 'All',
@@ -311,16 +167,13 @@ class OpportunityRepository {
     try {
       return _opportunitiesNotifier.value.firstWhere((o) => o.id == id);
     } catch (_) {
-      try {
-        return _initialOpportunities.firstWhere((o) => o.id == id);
-      } catch (_) {
-        return null;
-      }
+      return null;
     }
   }
 
-  /// Resets user-specific saved state on logout.
+  /// Resets state on logout to prevent cross-user data leakage.
   void reset() {
     _savedOpportunitiesNotifier.value = [];
+    _opportunitiesNotifier.value = [];
   }
 }

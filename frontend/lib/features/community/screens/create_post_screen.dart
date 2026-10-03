@@ -52,11 +52,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
     final newPost = Post(
       id: 'post_${DateTime.now().millisecondsSinceEpoch}',
-      authorId: user?.id ?? 'demo_user_1',
-      authorName: user?.name.isNotEmpty == true ? user!.name : 'Sandeep B',
-      authorRole: user?.branch.isNotEmpty == true ? '${user?.year} · ${user?.branch}' : 'Year 3 · Student Developer',
-      authorYear: user?.year ?? 'Year 3',
-      authorAvatar: user?.avatarInitials ?? 'SB',
+      authorId: user?.id ?? '',
+      authorName: (user?.name.isNotEmpty == true) ? user!.name : 'Student',
+      authorRole: (user?.branch.isNotEmpty == true && user?.year.isNotEmpty == true)
+          ? '${user?.year} · ${user?.branch}'
+          : 'Student',
+      authorYear: user?.year ?? '',
+      authorAvatar: user?.avatarInitials ?? (user?.name.isNotEmpty == true ? user!.name[0].toUpperCase() : 'S'),
       type: _selectedType,
       title: _titleController.text.trim(),
       content: _contentController.text.trim(),
